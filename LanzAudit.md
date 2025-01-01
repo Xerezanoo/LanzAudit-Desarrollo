@@ -158,7 +158,8 @@ https://github.com/app-generator/flask-adminator/tree/master
 Para montarla:
 1. Clonamos el repositorio
 2. Entramos en él
-3. Activamos nuestro entorno virtual. Voy a usar el propio de python.
+3. Activamos nuestro entorno virtual. Voy a usar el propio de Python.
+Como estoy en una distribución basada en Debian, lo instalo con `sudo apt install python3-venv -y`, lo creo con `python3 -m venv venv` y lo activo con `source venv/bin/activate`
 4. Instalamos las dependencias con `pip3 install -r requirements.txt`
 5. `export FLASK_APP=run.py`
 6. `export FLASK_DEBUG=development`
