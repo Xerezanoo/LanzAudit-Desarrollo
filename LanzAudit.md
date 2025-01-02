@@ -120,7 +120,7 @@ ENTRYPOINT ["java", "-jar", "/opt/vulnmanager-1.0-SNAPSHOT.jar"]
 
 4. En el archivo `pom.xml`, haremos varias modificaciones:
 5. Primero, añadiremos las siguientes dependencias debajo de las existentes en `<dependencies>`:
-```bash
+```java
 <dependency>
      <groupId>javax.xml.bind</groupId>
      <artifactId>jaxb-api</artifactId>
@@ -159,8 +159,11 @@ Para montarla:
 1. Clonamos el repositorio
 2. Entramos en él
 3. Activamos nuestro entorno virtual. Voy a usar el propio de Python.
-Como estoy en una distribución basada en Debian, lo instalo con `sudo apt install python3-venv -y`, lo creo con `python3 -m venv venv` y lo activo con `source venv/bin/activate`
+Como estoy en una distribución basada en Debian, lo instalo con `sudo apt install python3-venv -y`, lo creo con `python3 -m venv venv` y lo activo con `source venv/bin/activate` --> Este paso es MUY IMPORTANTE
 4. Instalamos las dependencias con `pip3 install -r requirements.txt`
 5. `export FLASK_APP=run.py`
-6. `export FLASK_DEBUG=development`
-7. Iniciamos la app en `http://127.0.0.1:5000/` con `flask run`
+6. `export FLASK_DEBUG=True` para trabajar y cuando lo vayamos a montar en el servidor para todos los usuarios, hacemos `export FLASK_DEBUG=False` para que no salgan los mensajes de error y no revelemos rutas sensibles.
+7. Iniciamos la app en `http://127.0.0.1:5000/` con `flask run` (siempre con el entorno virtual activado, porque si no no tendremos las dependencias necesarias para iniciarla)
+### Modificaciones
+#### Archivo `gunicorn-cfg.py`
+Cambiamos el bind a `0.0.0.0:8080`, que es el puerto donde vamos a levantar la app en DigitalOcean
