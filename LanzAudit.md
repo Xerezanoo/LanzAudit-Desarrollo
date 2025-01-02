@@ -167,3 +167,140 @@ Como estoy en una distribución basada en Debian, lo instalo con `sudo apt insta
 ### Modificaciones
 #### Archivo `gunicorn-cfg.py`
 Cambiamos el bind a `0.0.0.0:8080`, que es el puerto donde vamos a levantar la app en DigitalOcean
+#### Migrar base de datos SQLite a MariaDB
+1. Instalamos y habilitamos MariaDB:
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install mariadb-server
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+```
+
+2. Creamos la base de datos:
+```bash
+sudo mysql -u root
+```
+```mysql
+CREATE DATABASE LanzAuditDB;
+CREATE USER 'LanzAdmin'@'localhost' IDENTIFIED BY 'admingarcialanza';
+GRANT ALL PRIVILEGES ON LanzAuditDB.* TO 'LanzAdmin'@'localhost';
+FLUSH PRIVILEGES;
+EXIT
+```
+
+3. Configuramos las variables de entorno:
+```bash
+export DB_ENGINE="mysql+pymysql"
+export DB_USERNAME="LanzAdmin"
+export DB_PASS="admingarcialanza"
+export DB_HOST="localhost"
+export DB_PORT="3306"
+export DB_NAME="LanzAuditDB"
+```
+
+4. Actualizamos el archivo `config.py`:
+```python
+import os
+import random
+import string
+
+class Config(object):
+    basedir = os.path.abspath(os.path.dirname(__file__))
+
+    # Assets Management
+    ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
+
+    # Set up the App SECRET_KEY
+    SECRET_KEY = os.getenv('SECRET_KEY', None)
+    if not SECRET_KEY:
+        SECRET_KEY = ''.join(random.choice(string.ascii_lowercase) for i in range(32))
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # MariaDB connection settings from environment variables
+    DB_ENGINE = os.getenv('DB_ENGINE', 'mysql+pymysql')
+    DB_USERNAME = os.getenv('DB_USERNAME', 'LanzAdmin')
+    DB_PASS = os.getenv('DB_PASS', 'admingarcialanza')
+    DB_HOST = os.getenv('DB_HOST', 'localhost')
+    DB_PORT = os.getenv('DB_PORT', '3306')
+    DB_NAME = os.getenv('DB_NAME', 'LanzAuditDB')
+
+    USE_SQLITE = False  # Cambiar a False ya que estamos usando MariaDB
+
+    # Database configuration for MariaDB
+    if DB_ENGINE and DB_NAME and DB_USERNAME:
+        try:
+            SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
+                DB_ENGINE, DB_USERNAME, DB_PASS, DB_HOST, DB_PORT, DB_NAME
+            )
+        except Exception as e:
+            print('> Error: DBMS Exception: ' + str(e))
+            print('> Fallback to SQLite ')
+            USE_SQLITE = True
+
+    # SQLite as fallback (only if MariaDB fails)
+    if USE_SQLITE:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite3')
+
+class ProductionConfig(Config):
+    DEBUG = False
+
+    # Security
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_DURATION = 3600
+
+
+class DebugConfig(Config):
+    DEBUG = True
+
+
+# Load all possible configurations
+config_dict = {
+    'Production': ProductionConfig,
+    'Debug': DebugConfig
+}
+```
+
+5. Instalamos las dependencias necesarias (con nuestro entorno virtual activado):
+```bash
+pip3 install pymysql flask-sqlalchemy
+```
+He añadido estas dependencias al archivo `requirements.txt` con `pip freeze > requirements.txt`
+
+6. Creamos y aplicamos las migraciones con Flask-Migrate:
+```bash
+# Inicializamos las migraciones
+flask db init
+
+# Creamos las migraciones
+flask db migrate
+
+# Y aplicamos las migraciones a la base de datos MariaDB
+flask db upgrade
+```
+
+7. Ejecutamos la aplicación:
+```bash
+flask run
+```
+
+8. Y comprobamos que se ha hecho correctamente la migración desde los logs de la consola al arrancar la aplicación o entrando en la base de datos y comprobando que están las tablas de LanzAudit
+
+#### Quitar el login y el register
+Como no necesito que los usuarios se autentiquen (porque solo necesito que el panel sea accesible), voy a quitar la autenticación. Para ello:
+1. Modificamos el archivo `apps/authentication/routes.py`:
+```python
+# 1. Modificamos la ruta por defecto para que sea
+@blueprint.route('/')
+def route_default():
+    return redirect(url_for('home_blueprint.index'))
+
+# 2. Eliminamos los bloques de login, register, logout y el bloque de unauthorized_handler (no solo los decoradores, sino todo lo que haya debajo de cada uno también)
+@blueprint.route('/login', methods=['GET', 'POST'])
+@blueprint.route('/register', methods=['GET', 'POST'])
+@blueprint.route('/logout')
+@login_manager.unauthorized_handler
+```
+
+2. Verificamos si tenemos el decorador `@login_required` en los archivos de la plantilla. Si lo tenemos en algún lado, lo eliminamos (SOLO EL DECORADOR, NO EL BLOQUE QUE CONTIENE)

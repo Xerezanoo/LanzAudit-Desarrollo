@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LanzAudit.md",
+                "file": "personalizacionShell.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "LanzAudit"
+              "title": "personalizacionShell"
             }
           }
         ]
@@ -162,8 +162,11 @@
       "command-palette:Abrir paleta de comandos": false
     }
   },
-  "active": "1703f16b29abdab9",
+  "active": "1f2a690f09065bcb",
   "lastOpenFiles": [
+    "README.md",
+    "personalizacionShell.md",
+    "LanzAudit.md",
     "Ideas/webhackshl/webhackshl",
     "Ideas/webhackshl/update.sh",
     "Ideas/webhackshl/uninstall.sh",
@@ -178,7 +181,6 @@
     "Ideas/webhackshl/modules/tplmap/tests/env_java_tests/spark-app/src/main/java/org/tplmap",
     "Ideas/webhackshl/modules/tplmap/tests/env_java_tests/spark-app/src/main/resources/templates",
     "Ideas/webhackshl/modules/tplmap/tests/env_java_tests/spark-app/src/main/java/org",
-    "Ideas/webhackshl/modules/tplmap/tests/env_java_tests/spark-app/gradle/wrapper/gradle-wrapper.properties",
     "Ideas/webhackshl/modules/tplmap/docker-envs/README.md",
     "Ideas/webhackshl/modules/tplmap/burp_extension/README.md",
     "Ideas/webhackshl/modules/tplmap/README.md",
@@ -200,9 +202,6 @@
     "Ideas/flask-adminator/media/flask-dashboard-adminator-screen.png",
     "Ideas/flask-adminator/README.md",
     "Ideas/flask-adminator/LICENSE.md",
-    "Ideas/flask-adminator/CHANGELOG.md",
-    "personalizacionShell.md",
-    "LanzAudit.md",
-    "README.md"
+    "Ideas/flask-adminator/CHANGELOG.md"
   ]
 }
