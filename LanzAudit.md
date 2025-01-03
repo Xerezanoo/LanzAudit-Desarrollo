@@ -149,7 +149,7 @@ ENTRYPOINT ["java", "-jar", "/opt/vulnmanager-1.0-SNAPSHOT.jar"]
 ```bash
 mvn clean install -DskipTests=true
 ```
-Se ha compilado correctamente, pero aun así siguen habiendo problemas al hacerle el `sudo docker compose build`
+Se ha compilado correctamente, pero aun así siguen habiendo problemas al hacerle el `sudo docker compose build`.
 
 ## Plantilla Dashboard Flask
 He encontrado un proyecto en GitHub con una plantilla de Panel muy parecida a lo que necesito:
@@ -165,7 +165,7 @@ Como estoy en una distribución basada en Debian, lo instalo con `sudo apt insta
 6. `export FLASK_DEBUG=True` para trabajar y cuando lo vayamos a montar en el servidor para todos los usuarios, hacemos `export FLASK_DEBUG=False` para que no salgan los mensajes de error y no revelemos rutas sensibles.
 7. Iniciamos la app en `http://127.0.0.1:5000/` con `flask run` (siempre con el entorno virtual activado, porque si no no tendremos las dependencias necesarias para iniciarla)
 ### Modificaciones
-#### Archivo `gunicorn-cfg.py`
+#### Archivo `gunicorn-cfg.py` **temporal
 Cambiamos el bind a `0.0.0.0:8080`, que es el puerto donde vamos a levantar la app en DigitalOcean
 #### Migrar base de datos SQLite a MariaDB
 1. Instalamos y habilitamos MariaDB:
@@ -198,7 +198,7 @@ export DB_PORT="3306"
 export DB_NAME="LanzAuditDB"
 ```
 
-4. Actualizamos el archivo `config.py`:
+4. Actualizamos el archivo `config.py` con los nuevos datos de nuestra base de datos con MariaDB:
 ```python
 import os
 import random
@@ -217,7 +217,7 @@ class Config(object):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # MariaDB connection settings from environment variables
+    # ACTUALIZACIÓN: Variables de entorno MariaDB
     DB_ENGINE = os.getenv('DB_ENGINE', 'mysql+pymysql')
     DB_USERNAME = os.getenv('DB_USERNAME', 'LanzAdmin')
     DB_PASS = os.getenv('DB_PASS', 'admingarcialanza')
@@ -227,7 +227,7 @@ class Config(object):
 
     USE_SQLITE = False  # Cambiar a False ya que estamos usando MariaDB
 
-    # Database configuration for MariaDB
+    # Configuración de la base de datos con MariaDB
     if DB_ENGINE and DB_NAME and DB_USERNAME:
         try:
             SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
@@ -238,7 +238,7 @@ class Config(object):
             print('> Fallback to SQLite ')
             USE_SQLITE = True
 
-    # SQLite as fallback (only if MariaDB fails)
+    # SQLite como reserva (si MariaDB falla)
     if USE_SQLITE:
         SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite3')
 
@@ -285,13 +285,13 @@ flask db upgrade
 flask run
 ```
 
-8. Y comprobamos que se ha hecho correctamente la migración desde los logs de la consola al arrancar la aplicación o entrando en la base de datos y comprobando que están las tablas de LanzAudit
+8. Y comprobamos que se ha hecho correctamente la migración desde los logs de la consola al arrancar la aplicación o entrando en la base de datos y comprobando que están las tablas de LanzAudit.
 
 #### Quitar el login y el register
-Como no necesito que los usuarios se autentiquen (porque solo necesito que el panel sea accesible), voy a quitar la autenticación. Para ello:
+Como no necesito que los usuarios se autentiquen (porque solo quiero un panel simple), voy a quitar la autenticación. Para ello:
 1. Modificamos el archivo `apps/authentication/routes.py`:
 ```python
-# 1. Modificamos la ruta por defecto para que sea
+# 1. Modificamos la ruta por defecto para que sea:
 @blueprint.route('/')
 def route_default():
     return redirect(url_for('home_blueprint.index'))
@@ -304,3 +304,11 @@ def route_default():
 ```
 
 2. Verificamos si tenemos el decorador `@login_required` en los archivos de la plantilla. Si lo tenemos en algún lado, lo eliminamos (SOLO EL DECORADOR, NO EL BLOQUE QUE CONTIENE)
+
+3. Eliminamos las plantillas de `apps/templates/accounts` (las dos plantillas que hay son las de `login`y la de `register`)
+
+4. Eliminamos el archivo `apps/templates/includes/navigation.html` y la línea `{% include 'includes/navigation.html' %}` del archivo `apps/templates/layouts/base.html`.
+
+#### Otras modificaciones
+##### Poner mi logo y mi nombre en la barra
+En `/apps/templates/includes/sidebar.html`, cambiar el logo por el mío y el nombre por `LanzAudit`. Ajusto la medida del logo a mi gusto y listo.
