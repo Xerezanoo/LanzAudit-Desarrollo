@@ -163,7 +163,8 @@ Como estoy en una distribución basada en Debian, lo instalo con `sudo apt insta
 4. Instalamos las dependencias con `pip3 install -r requirements.txt`
 5. `export FLASK_APP=run.py`
 6. `export FLASK_DEBUG=True` para trabajar y cuando lo vayamos a montar en el servidor para todos los usuarios, hacemos `export FLASK_DEBUG=False` para que no salgan los mensajes de error y no revelemos rutas sensibles.
-7. Iniciamos la app en `http://127.0.0.1:5000/` con `flask run` (siempre con el entorno virtual activado, porque si no no tendremos las dependencias necesarias para iniciarla)
+7. Montamos la base de datos y exportamos las variables de entorno de la base de datos (ver más abajo)
+8. Iniciamos la app en `http://127.0.0.1:5000/` con `flask run` (siempre con el entorno virtual activado, porque si no no tendremos las dependencias necesarias para iniciarla)
 ### Modificaciones
 #### Archivo `gunicorn-cfg.py` **temporal
 Cambiamos el bind a `0.0.0.0:8080`, que es el puerto donde vamos a levantar la app en DigitalOcean
@@ -188,7 +189,7 @@ FLUSH PRIVILEGES;
 EXIT
 ```
 
-3. Configuramos las variables de entorno:
+3. Configuramos las variables de entorno (según lo que necesites):
 ```bash
 export DB_ENGINE="mysql+pymysql"
 export DB_USERNAME="LanzAdmin"
@@ -312,3 +313,6 @@ def route_default():
 #### Otras modificaciones
 ##### Poner mi logo y mi nombre en la barra
 En `/apps/templates/includes/sidebar.html`, cambiar el logo por el mío y el nombre por `LanzAudit`. Ajusto la medida del logo a mi gusto y listo.
+
+
+#### Para hacer copias

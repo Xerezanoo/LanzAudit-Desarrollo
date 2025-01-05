@@ -1,9 +1,0 @@
-[submodule "Ideas/flask-adminator"]
-	path = Ideas/flask-adminator
-	url = https://github.com/app-generator/flask-adminator
-[submodule "Ideas/vulnmanager"]
-	path = Ideas/vulnmanager
-	url = https://github.com/xebia-research/vulnmanager
-[submodule "Ideas/webhackshl"]
-	path = Ideas/webhackshl
-	url = https://github.com/SecHackLabs/webhackshl.git
