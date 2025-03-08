@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "LanzAudit.md",
+                "file": "LanzAudit - Aplicación web de auditorías de seguridad automáticas con panel.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "LanzAudit"
+              "title": "LanzAudit - Aplicación web de auditorías de seguridad automáticas con panel"
             }
           }
         ]
@@ -40,7 +40,8 @@
             "state": {
               "type": "file-explorer",
               "state": {
-                "sortOrder": "alphabetical"
+                "sortOrder": "alphabetical",
+                "autoReveal": false
               },
               "icon": "lucide-folder-closed",
               "title": "Explorador de archivos"
@@ -164,6 +165,7 @@
   },
   "active": "1f2a690f09065bcb",
   "lastOpenFiles": [
+    "LanzAudit.md",
     "Ideas/flask-adminator/venv/lib/python3.12/site-packages/pymysql/__pycache__/times.cpython-312.pyc",
     "Ideas/flask-adminator/venv/lib/python3.12/site-packages/pymysql/__pycache__/protocol.cpython-312.pyc",
     "Ideas/flask-adminator/venv/lib/python3.12/site-packages/pymysql/__pycache__/optionfile.cpython-312.pyc",
@@ -174,10 +176,8 @@
     "Ideas/flask-adminator/venv/lib/python3.12/site-packages/pymysql/__pycache__/charset.cpython-312.pyc",
     "Ideas/flask-adminator/venv/lib/python3.12/site-packages/pymysql/__pycache__/_auth.cpython-312.pyc",
     "Ideas/flask-adminator/venv/lib/python3.12/site-packages/pymysql/__pycache__/__init__.cpython-312.pyc",
-    "Ideas/flask-adminator/venv/lib/python3.12/site-packages/pymysql/__pycache__",
     "personalizacionShell.md",
     "README.md",
-    "LanzAudit.md",
     "Ideas/webhackshl/screenshots/webhackshl-main.png",
     "Ideas/webhackshl/screenshots/webhackshl-dorksearch.png",
     "Ideas/webhackshl/screenshots/webhackshl-dns.png",

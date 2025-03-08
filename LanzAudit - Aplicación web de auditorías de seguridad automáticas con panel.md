@@ -11,6 +11,7 @@ LanzAudit, una aplicación web de gestión de auditorías de seguridad diseñada
 ### 1.3. Dashboard (Panel) Centralizado de Auditorías
 - Visualización de métricas clave: hallazgos críticos, niveles de **riesgo**, y tendencias.
 - **Gráficos** interactivos para comparar auditorías y evaluar el cumplimiento normativo.
+- 
 ### 1.4. Informes Automatizados
 - Generación de **informes** completos en **PDF** con detalles de hallazgos, riesgos y recomendaciones.
 - Sección de análisis histórico para observar mejoras en las auditorías.
