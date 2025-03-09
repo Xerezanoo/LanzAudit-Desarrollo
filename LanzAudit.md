@@ -315,4 +315,23 @@ def route_default():
 En `/apps/templates/includes/sidebar.html`, cambiar el logo por el mío y el nombre por `LanzAudit`. Ajusto la medida del logo a mi gusto y listo.
 
 
-#### Para hacer copias
+---
+## LanzAudit
+1. Clonamos el repositorio que contiene la aplicación
+2. Creamos un entorno virtual
+```bash
+python3 -m venv .venv
+```
+3. Activamos el entorno virtual
+```bash
+source .venv/bin/activate
+```
+4. Instalamos las dependencias de la aplicación a partir del archivo `requirements.txt`
+```bash
+pip3 install -r requirements.txt
+```
+5. Ya podemos desarrollar o usar la aplicación
+6. La levantamos por el puerto 5000 con:
+```bash
+flask run
+```
