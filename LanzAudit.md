@@ -1,4 +1,3 @@
-# LanzAudit
 ## Framework Backend:
 Flask --> ¿Por qué Flask en vez de Django?
 
@@ -79,7 +78,7 @@ mvn clean install -DskipTests=true
 ```
 Se ha compilado correctamente, pero aun así siguen habiendo problemas al hacerle el `sudo docker compose build`.
 
-## Plantilla Dashboard Flask
+## Plantilla Dashboard Flask (Flask-adminator)
 He encontrado un proyecto en GitHub con una plantilla de Panel muy parecida a lo que necesito:
 https://github.com/app-generator/flask-adminator/tree/master
 
@@ -245,6 +244,7 @@ En `/apps/templates/includes/sidebar.html`, cambiar el logo por el mío y el nom
 
 ---
 ## LanzAudit
+### Modo Local
 1. Clonamos el repositorio que contiene la aplicación
 2. Creamos un entorno virtual
 ```bash
@@ -263,3 +263,33 @@ pip3 install -r requirements.txt
 ```bash
 flask run
 ```
+### Modo VPS
+
+
+---
+## Plantilla Dashboard LanzAudit (AdminLTE)
+He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE](https://adminlte.io/)
+### Cambios realizados
+#### `index.html`
+1. En `<head>`:
+    - Título
+    - Metadatos
+    - Rutas de los estilos a mi carpeta `static/css`
+2. En `<body>` :
+    - Barra de navegación
+    - Eliminación del widget de mensajes
+    - Configuración con el backend del widget de búsqueda
+    - Configuración con el backend del widget de notificaciones
+    
+
+#### `login.html`
+1. En `<head>`:
+    - Rutas de los estilos a mi carpeta `static/css`
+
+2. En `<body>`:
+    - Cambiamos el nombre de la aplicación que redirige a otra página por texto en negrita que no redirija a ningún lado
+    - Cambiamos el texto que viene en inglés para poner "Inicia sesión para acceder al panel"
+    - Quitamos la opción de iniciar sesión con Google o con Facebook
+    - Quitamos la opción de "Remember me"
+    - Quitamos la opción de registrarse, ya que mi aplicación está pensada para empresas, por lo que solo el usuario administrador será el que podrá crear desde dentro de la aplicación al resto de usuarios
+    - Cambio el grid para que el botón de iniciar sesión ocupe todas las columnas de su fila

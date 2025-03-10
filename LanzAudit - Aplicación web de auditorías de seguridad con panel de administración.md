@@ -1,6 +1,5 @@
-## Pre-proyecto
-LanzAudit, una aplicación web de gestión de auditorías de seguridad diseñada para realizar, registrar y gestionar auditorías automáticas de redes y sistemas.
-### 1. Funcionalidades
+LanzAudit es una aplicación web diseñada para realizar y gestionar auditorías de seguridad sin necesidad de conocimientos avanzados en Ciberseguridad.
+## 1. Funcionalidades
 ### 1.1. Gestión de Auditorías
 - Panel centralizado para ejecutar y gestionar auditorías.
 - Registro de hallazgos.
@@ -11,7 +10,6 @@ LanzAudit, una aplicación web de gestión de auditorías de seguridad diseñada
 ### 1.3. Dashboard (Panel) Centralizado de Auditorías
 - Visualización de métricas clave: hallazgos críticos, niveles de **riesgo**, y tendencias.
 - **Gráficos** interactivos para comparar auditorías y evaluar el cumplimiento normativo.
-- 
 ### 1.4. Informes Automatizados
 - Generación de **informes** completos en **PDF** con detalles de hallazgos, riesgos y recomendaciones.
 - Sección de análisis histórico para observar mejoras en las auditorías.
@@ -33,7 +31,7 @@ LanzAudit, una aplicación web de gestión de auditorías de seguridad diseñada
 ### 3.1. Creación de una Auditoría
 - El usuario realiza una nueva auditoría en el panel, seleccionando la IP, puertos o sistemas a auditar.
 ### 3.2. Ejecución del Escaneo
-- El backend lanza un escaneo automático usando OpenVAS / Nessus / Nmap y las herramientas que vaya a usar y recopila los resultados.
+- El backend lanza un escaneo usando OpenVAS / Nessus / Nmap y las herramientas que vaya a usar y recopila los resultados.
 - Se almacenan los hallazgos y su criticidad en la base de datos.
 ### 3.3. Visualización de Resultados
 - El panel muestra los hallazgos organizados por sistemas y criticidad.
