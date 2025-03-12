@@ -269,27 +269,34 @@ flask run
 ---
 ## Plantilla Dashboard LanzAudit (AdminLTE)
 He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE](https://adminlte.io/)
-### Cambios realizados
-#### `index.html`
+
+---
+## Plantillas HTML usadas
+### `index.html` --> De AdminLTE
 1. En `<head>`:
-    - Título
-    - Metadatos
-    - Rutas de los estilos a mi carpeta `static/css`
+    - Título.
+    - Metadatos.
+    - Rutas de los estilos a mi carpeta `static/css`.
 2. En `<body>` :
-    - Barra de navegación
-    - Eliminación del widget de mensajes
-    - Configuración con el backend del widget de búsqueda
-    - Configuración con el backend del widget de notificaciones
+    - Barra de navegación.
+    - Eliminación del widget de mensajes.
+    - Configuración con el backend del widget de búsqueda.
+    - Configuración con el backend del widget de notificaciones.
     
 
-#### `login.html`
+### `login.html` --> De AdminLTE
 1. En `<head>`:
-    - Rutas de los estilos a mi carpeta `static/css`
+    - Rutas de los estilos a mi carpeta `static/css`.
 
 2. En `<body>`:
-    - Cambiamos el nombre de la aplicación que redirige a otra página por texto en negrita que no redirija a ningún lado
-    - Cambiamos el texto que viene en inglés para poner "Inicia sesión para acceder al panel"
-    - Quitamos la opción de iniciar sesión con Google o con Facebook
-    - Quitamos la opción de "Remember me"
-    - Quitamos la opción de registrarse, ya que mi aplicación está pensada para empresas, por lo que solo el usuario administrador será el que podrá crear desde dentro de la aplicación al resto de usuarios
-    - Cambio el grid para que el botón de iniciar sesión ocupe todas las columnas de su fila
+    - Cambiamos el nombre de la aplicación que redirige a otra página por texto en negrita que no redirija a ningún lado y ponemos al lado mi logo.
+    - Cambiamos el texto que viene en inglés para poner "Inicia sesión para acceder al panel".
+    - Quitamos la opción de iniciar sesión con Google o con Facebook.
+    - Quitamos la opción de "Remember me".
+    - Quitamos la opción de registrarse, ya que mi aplicación está pensada para empresas, por lo que solo el usuario administrador será el que podrá crear desde dentro de la aplicación al resto de usuarios.
+    - Cambio el grid para que el botón de iniciar sesión ocupe todas las columnas de su fila.
+    - Dejamos abajo un solo enlace de "He olvidado mi contraseña" que te redirige a un formulario para realizar una solicitud de restablecimiento de contraseña al administrador.
+    - He añadido al final un script de validación que viene en uno de los formularios de ejemplos de AdminLTE, en `dist/pages/forms/general.html`. 
+
+### `forgot-password.html` --> Propia
+Es casi igual que la de login,
