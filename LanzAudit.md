@@ -299,4 +299,9 @@ He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE]
     - He añadido al final un script de validación que viene en uno de los formularios de ejemplos de AdminLTE, en `dist/pages/forms/general.html`. 
 
 ### `forgot-password.html` --> Propia
-Es casi igual que la de login,
+Es casi igual que la de login, pero tiene explicado que la página es para enviarle una solicitud al administrador para recuperar tu contraseña.
+Tiene 3 campos para introducir información que le llegará al administrador para que este se ponga en contacto con el usuario para restablecer su contraseña:
+- Correo electrónico del usuario
+- Motivo de la solicitud
+- Algún mensaje adicional --> Tiene un valor por defecto que es `""`, es decir, se enviará un texto vacío.
+También tiene el script de validación.
