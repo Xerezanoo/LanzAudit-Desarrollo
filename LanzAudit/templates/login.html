@@ -35,23 +35,26 @@
     <link rel="stylesheet" href="../static/css/adminlte.css" />
   </head>
 
-
+  <!--begin::Body-->
   <body class="login-page bg-body-secondary">
     <div class="login-box">
       <div class="login-logo">
         <strong><b>LanzAudit</b></strong>
       </div>
+      <!-- /.login-logo -->
       <div class="card">
         <div class="card-body login-card-body">
           <p class="login-box-msg">Inicia sesión para acceder al panel</p>
-          <form action="/login" method="POST">
+          <form class="needs-validation" novalidate action="/login" method="POST">
             <div class="input-group mb-3">
-              <input type="email" name="email" class="form-control" placeholder="Email" required/>
+              <input type="email" id="validationCustom01" name="email" class="form-control" placeholder="Correo electrónico" required/>
               <div class="input-group-text"><span class="bi bi-envelope"></span></div>
+              <div class="invalid-feedback">Por favor, introduce un correo electrónico válido.</div>
             </div>
             <div class="input-group mb-3">
-              <input type="password" name="password" class="form-control" placeholder="Password" required/>
+              <input type="password" id="validationCustom02" name="password" class="form-control" placeholder="Contraseña" required/>
               <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
+              <div class="invalid-feedback">Por favor, introduce una contraseña.</div>
             </div>
             <!--begin::Row-->
             <div class="row">
@@ -116,6 +119,26 @@
     </script>
     <!--end::OverlayScrollbars Configure-->
     <!--end::Script-->
+    <!-- begin::Script Validación -->
+    <script>
+      (() => {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach((form) => {
+          form.addEventListener(
+            'submit',
+            (event) => {
+              if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+              }
+              form.classList.add('was-validated');
+            },
+            false,
+          );
+        });
+      })();
+    </script>
+    <!-- end::Script Validación -->
   </body>
-  <!--end::Body-->
 </html>
