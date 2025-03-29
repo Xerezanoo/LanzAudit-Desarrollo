@@ -180,7 +180,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="./docs/license.html" class="nav-link">
+                <a href="/license" class="nav-link">
                   <i class="nav-icon bi bi-file-earmark-text-fill"></i>
                   <p>Licencia</p>
                 </a>
@@ -196,9 +196,7 @@
       <main class="app-main">
         <!--begin::App Content Header-->
         <div class="app-content-header">
-          <!--begin::Container-->
           <div class="container-fluid">
-            <!--begin::Row-->
             <div class="row">
               <div class="col-sm-6"><h3 class="mb-0">Inicio - Dashboard</h3></div>
               <div class="col-sm-6">
@@ -207,82 +205,116 @@
                 </ol>
               </div>
             </div>
-            <!--end::Row-->
           </div>
-          <!--end::Container-->
         </div>
         <!--end::App Content Header-->
         <!--begin::App Content-->
         <div class="app-content">
-          <!--begin::Container-->
           <div class="container-fluid">
-            <!--begin::Row-->
+            <!--begin::Row de métricas-->
             <div class="row">
-              <!-- Start col -->
-              <div class="col-lg-7 connectedSortable">
-                <div class="card mb-4">
-                  <div class="card-header"><h3 class="card-title">Sales Value</h3></div>
-                  <div class="card-body"><div id="revenue-chart"></div></div>
+              <div class="col-lg-3 col-md-6">
+                <div class="card bg-primary text-white mb-4">
+                  <div class="card-body">Total Escaneos: <strong>120</strong></div>
                 </div>
-                <!-- /.card -->
-              <!-- /.Start col -->
-              <!-- Start col -->
-              <div class="col-lg-5 connectedSortable">
-                <div class="card text-white bg-primary bg-gradient border-primary mb-4">
-                  <div class="card-header border-0">
-                    <h3 class="card-title">Sales Value</h3>
-                    <div class="card-tools">
-                      <button
-                        type="button"
-                        class="btn btn-primary btn-sm"
-                        data-lte-toggle="card-collapse"
-                      >
-                        <i data-lte-icon="expand" class="bi bi-plus-lg"></i>
-                        <i data-lte-icon="collapse" class="bi bi-dash-lg"></i>
-                      </button>
+              </div>
+              <div class="col-lg-3 col-md-6">
+                <div class="card bg-danger text-white mb-4">
+                  <div class="card-body">Vulnerabilidades Detectadas: <strong>45</strong></div>
+                </div>
+              </div>
+              <div class="col-lg-3 col-md-6">
+                <div class="card bg-success text-white mb-4">
+                  <div class="card-body">Hosts Analizados: <strong>80</strong></div>
+                </div>
+              </div>
+              <div class="col-lg-3 col-md-6">
+                <div class="card bg-warning text-white mb-4">
+                  <div class="card-body">Escaneos en Progreso: <strong>5</strong></div>
+                </div>
+              </div>
+            </div>
+            <!--end::Row de métricas-->
+            <!--begin::Row de gráficos-->
+            <div class="row">
+              <div class="col-lg-7">
+                <div class="card mb-4">
+                  <div class="card-header"><h3 class="card-title">Escaneos por Tipo</h3></div>
+                  <div class="card-body">
+                    <div class="chart-container">
+                      <canvas id="scanTypeChart"></canvas>
                     </div>
-                  </div>
-                  <div class="card-body"><div id="world-map" style="height: 220px"></div></div>
-                  <div class="card-footer border-0">
-                    <!--begin::Row-->
-                    <div class="row">
-                      <div class="col-4 text-center">
-                        <div id="sparkline-1" class="text-dark"></div>
-                        <div class="text-white">Visitors</div>
-                      </div>
-                      <div class="col-4 text-center">
-                        <div id="sparkline-2" class="text-dark"></div>
-                        <div class="text-white">Online</div>
-                      </div>
-                      <div class="col-4 text-center">
-                        <div id="sparkline-3" class="text-dark"></div>
-                        <div class="text-white">Sales</div>
-                      </div>
-                    </div>
-                    <!--end::Row-->
                   </div>
                 </div>
               </div>
-              <!-- /.Start col -->
+              <div class="col-lg-5">
+                <div class="card mb-4">
+                  <div class="card-header"><h3 class="card-title">Actividad Reciente</h3></div>
+                  <div class="card-body">
+                    <ul class="list-group">
+                      <li class="list-group-item">[29/03/2025] Escaneo de puertos en 192.168.1.1 - <span class="badge bg-success">Completado</span></li>
+                      <li class="list-group-item">[28/03/2025] Escaneo de vulnerabilidades en example.com - <span class="badge bg-danger">Fallido</span></li>
+                      <li class="list-group-item">[27/03/2025] Escaneo global en 10.0.0.5 - <span class="badge bg-warning">En Progreso</span></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
-            <!-- /.row (main row) -->
+            <!--end::Row de gráficos-->
+            <!--begin::Últimos escaneos-->
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="card">
+                  <div class="card-header"><h3 class="card-title">Últimos Escaneos</h3></div>
+                  <div class="card-body">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>IP/Host</th>
+                          <th>Tipo</th>
+                          <th>Fecha</th>
+                          <th>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>1</td>
+                          <td>192.168.1.1</td>
+                          <td>Escaneo de Puertos</td>
+                          <td>29/03/2025</td>
+                          <td><span class="badge bg-success">Completado</span></td>
+                        </tr>
+                        <tr>
+                          <td>2</td>
+                          <td>example.com</td>
+                          <td>Vulnerabilidades</td>
+                          <td>28/03/2025</td>
+                          <td><span class="badge bg-danger">Fallido</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--end::Últimos escaneos-->
           </div>
-          <!--end::Container-->
         </div>
         <!--end::App Content-->
       </main>
       <!--end::App Main-->
+
       <!--begin::Footer-->
       <footer class="app-footer">
         <!--begin::To the end-->
-        <div class="float-end d-none d-sm-inline">Anything you want</div>
+        <div class="float-end d-none d-sm-inline">Juan García</div>
         <!--end::To the end-->
         <!--begin::Copyright-->
         <strong>
-          Copyright &copy; 2014-2024&nbsp;
-          <a class="text-decoration-none">LanzAudit</a>.
+          Copyright &copy; 2025&nbsp;
+          LanzAudit
         </strong>
-        All rights reserved.
         <!--end::Copyright-->
       </footer>
       <!--end::Footer-->
@@ -537,6 +569,31 @@
       sparkline3.render();
     </script>
     <!--end::Script-->
+    <!--begin::Script para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      var ctx = document.getElementById('scanTypeChart').getContext('2d');
+      var scanTypeChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Puertos', 'Vulnerabilidades', 'WordPress', 'Joomla'],
+          datasets: [{
+            data: [50, 30, 15, 5],
+            backgroundColor: ['#007bff', '#dc3545', '#28a745', '#ffc107']
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+          },
+        },
+      });
+    </script>
+    <!--end::Script para gráficos -->
   </body>
   <!--end::Body-->
-</html>
+  </html>
