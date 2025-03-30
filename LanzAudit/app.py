@@ -6,13 +6,17 @@ app = Flask(__name__)
 def login():
     return render_template("login.html")
 
-@app.route('/forgot-password')
-def forgotPassword():
-    return render_template("forgot-password.html")
+@app.route('/password-recovery')
+def passwordRecovery():
+    return render_template("password-recovery.html")
 
 @app.route('/dashboard')
 def home():
     return render_template("index.html")
+
+@app.route('/faq')
+def faq():
+    return render_template("faq.html")
 
 @app.route('/license')
 def license():

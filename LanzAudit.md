@@ -278,10 +278,9 @@ He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE]
     - Metadatos.
     - Rutas de los estilos a mi carpeta `static/css`.
 2. En `<body>` :
-    - Barra de navegación.
-    - Eliminación del widget de mensajes.
-    - Configuración con el backend del widget de búsqueda.
-    - Configuración con el backend del widget de notificaciones.
+    - Barra de navegación con una herramienta para poner el panel en pantalla completa y con tu perfil de usuario para cerrar sesión o modificar los datos.
+    - Sidebar con los enlaces al Inicio, la herramienta para Realizar los escaneos, la página para ver las Estadísticas y los resultados de las auditorías, una página que solo será mostrada al administrador para la gestión de usuarios y las páginas de preguntas frecuentes y la licencia
+    - En el panel principal se verán algunas estadísticas principales como los 2 o 3 últimos escaneos, un gráfico con el número de escaneos por tipo y algunas estadísticas más.
     
 
 ### `login.html` --> De AdminLTE
@@ -305,3 +304,9 @@ Tiene 3 campos para introducir información que le llegará al administrador par
 - Motivo de la solicitud
 - Algún mensaje adicional --> Tiene un valor por defecto que es `""`, es decir, se enviará un texto vacío.
 También tiene el script de validación.
+
+### `license.html` --> Propia
+Una tarjeta informando sobre la licencia que uso en mi aplicación con un enlace a la licencia.
+
+### `faq.html` --> Propia
+Otra tarjeta del mismo estilo que la de la licencia con las preguntas más frecuentes sobre el uso de mi aplicación.
