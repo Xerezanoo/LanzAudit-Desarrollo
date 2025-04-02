@@ -310,3 +310,44 @@ Una tarjeta informando sobre la licencia que uso en mi aplicación con un enlace
 
 ### `faq.html` --> Propia
 Otra tarjeta del mismo estilo que la de la licencia con las preguntas más frecuentes sobre el uso de mi aplicación.
+
+
+
+---
+## Base de datos
+Antes de crear la base de datos, he hecho un análisis para ver qué necesito, qué voy a hacer y cómo lo voy a hacer.
+Voy a empezar por una base de datos simple con 3 tablas y ya iré ampliando conforme vaya necesitando cosas.
+### Tabla `users`
+Esta tabla almacena la información de los usuarios del sistema.
+
+Atributos:
+- `id`: Identificador único de cada usuario (clave primaria).
+- `username`: Nombre de usuario único.
+- `email`: Correo electrónico del usuario.
+- `password_hash`: Contraseña cifrada del usuario.
+- `profile_picture`: Foto de perfil del usuario.
+- `role`: Rol del usuario (Admin, Worker, Analyst). El Administrador podrá hacerlo todo además de gestionar los usuarios de la aplicación y recibir las solicitudes de recuperación de las contraseñas. Los Trabajadores serán los que realicen los escaneos y los Analistas solo verán las estadísticas y analizarán los resultados.
+- `created_at`: Fecha y hora en que se creó el usuario.
+
+### Tabla `scans`
+Esta tabla almacena los escaneos realizados por los usuarios.
+
+Atributos:
+- `id`: Identificador único del escaneo (clave primaria).
+- `user_id`: ID del usuario que realizó el escaneo (clave foránea a users.id).
+- `scan_type`: Tipo de escaneo (Puertos, WordPress en principio).
+- `scan_parameters`: Parámetros del escaneo.
+- `status`: Estado del escaneo.
+- `created_at`: Fecha y hora en que se realizó el escaneo.
+
+
+### Tabla `scan_results`
+Esta tabla almacena los resultados de cada escaneo.
+
+Atributos:
+- `id`: Identificador único del resultado (clave primaria).
+- `scan_id`: ID del escaneo al que pertenece el resultado (clave foránea a scans.id).
+- `result`: Descripción o detalle del resultado (por ejemplo, "vulnerabilidad encontrada", "puerto abierto").
+- `created_at`: Fecha y hora en que se generó el resultado.
+
+

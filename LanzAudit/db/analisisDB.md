@@ -60,12 +60,3 @@ Relación uno a muchos con scan_results (un escaneo puede generar múltiples res
 
 **Relación:**
 Relación muchos a uno con scans (varios resultados pueden pertenecer a un único escaneo).
-
-
-## Pasos en Dia para crear el diagrama:
-1. Abrir Dia y crear un nuevo archivo de diagrama.
-2. Usar el cuadro de entidades (Entity) para representar las tablas.
-3. Agregar los atributos a cada entidad.
-4. Usar el cuadro de relaciones (Relationship) para dibujar las relaciones entre las entidades:
-5. Una relación de tipo uno a muchos de users a scans y de scans a scan_results.
-6. Etiqueta las relaciones con "1" en el lado de la entidad "uno" y "*" en el lado de la entidad "muchos".
