@@ -7,10 +7,26 @@ from flask_login import login_user
 from models import User
 from app import app, db # App Flask
 
+# Verificamos si existe el usuario Administrador (LanzAdmin) existe. Si no existe, se redirige a la página de configuración de LanzAdmin.
+@app.before_first_request
+def check_admin_user():
+    admin = User.query.filter_by(username='LanzAdmin').first()
+    if not admin:
+        return redirect(url_for('setup_admin'))
+
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app
 @app.route('/', methods=['GET', 'POST'])
 def login():
-    return render_template("login.html")
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        user = User.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Correo electrónico o contraseña incorrectos', 'danger')
+    return render_template('login.html')
 
 # Ruta para la página de recuperación de contraseña
 @app.route('/password-recovery')

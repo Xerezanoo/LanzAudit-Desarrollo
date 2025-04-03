@@ -315,7 +315,10 @@ Una tarjeta informando sobre la licencia que uso en mi aplicación con un enlace
 ### `faq.html`
 Otra tarjeta del mismo estilo que la de la licencia con las preguntas más frecuentes sobre el uso de mi aplicación.
 
+### manage-users.html
+Una lista con los usuarios que hay guardados en la base de datos y su información. Además, algunos botones para modificarlos, eliminarlos o crear nuevos. A esta página solo tendrán acceso los usuarios con el rol 'admin'.
 
+###
 
 ---
 ## Base de datos
@@ -489,7 +492,7 @@ nano .env
 La clave secreta la he generado con mi proyecto [PassGen](https://github.com/Xerezanoo/PassGen).
 ```
 SECRET_KEY=69K@i2WlPyy&
-DATABASE_URL=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
+DATABASE_URI=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
 ```
 3. **Añadimos `.env` al archivo `.gitignore`**
 4. **Modificamos `config.py` para usar las variables del `.env`**
@@ -515,7 +518,7 @@ app.config.from_object(Config)
 6. **Reiniciamos la aplicación**
 
 ---
-## Migración del proyecto a otro equipo
+## Migración del proyecto a otro equipo para desarrollo
 1. Clonamos el proyecto en el nuevo equipo
 ```bash
 git clone https://github.com/Xerezanoo/LanzAudit.git
@@ -551,7 +554,7 @@ nano .env
 La clave secreta es la que he generado con mi programa [PassGen](https://github.com/Xerezanoo/PassGen). Voy a usar la misma en todos los equipos donde vaya a desarrollar.
 ```
 SECRET_KEY=69K@i2WlPyy&
-DATABASE_URL=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
+DATABASE_URI=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
 ```
 7. Y listo, ya se puede usar la app ejecutándola con `flask run`.
 
