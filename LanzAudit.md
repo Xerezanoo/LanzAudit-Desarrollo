@@ -486,7 +486,7 @@ pip3 install python-dotenv
 ```bash
 nano .env
 ```
-La clave secreta la he generado con mi proyecto ![PassGen](https://github.com/Xerezanoo/PassGen).
+La clave secreta la he generado con mi proyecto [PassGen](https://github.com/Xerezanoo/PassGen).
 ```
 SECRET_KEY=69K@i2WlPyy&
 DATABASE_URL=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
@@ -514,6 +514,46 @@ app.config.from_object(Config)
 ```
 6. **Reiniciamos la aplicación**
 
+---
+## Migración del proyecto a otro equipo
+1. Clonamos el proyecto en el nuevo equipo
+```bash
+git clone https://github.com/Xerezanoo/LanzAudit.git
+```
+2. Creamos un entorno virtual
+```bash
+python3 -m venv .venv
+```
+3. Activamos el entorno virtual
+```bash
+source .venv/bin/activate
+```
+4. Instalamos las dependencias
+```bash
+pip3 install -r requirements.txt
+```
+5. Creamos nuestra base de datos, que podemos hacerlo de 2 formas:
+- Manual --> Instalando un servidor de base de datos en nuestro equipo y creando y configurando la base de datos y el usuario Administrador de la base de datos
+- Docker --> Usamos el siguiente comando para crear un contenedor Docker con la base de datos:
+```bash
+docker run -d \
+--name LanzAuditDB \
+-e MARIADB_ROOT_PASSWORD=root \
+-e MARIADB_DATABASE=LanzAuditDB \
+-e MARIADB_USER=LanzAdmin \
+-e MARIADB_PASSWORD=admingarcialanza \
+-p 3306:3306 mariadb:latest
+```
+6. Creamos y configuramos nuestro archivo `.env`
+```bash
+nano .env
+```
+La clave secreta es la que he generado con mi programa [PassGen](https://github.com/Xerezanoo/PassGen). Voy a usar la misma en todos los equipos donde vaya a desarrollar.
+```
+SECRET_KEY=69K@i2WlPyy&
+DATABASE_URL=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
+```
+7. Y listo, ya se puede usar la app ejecutándola con `flask run`.
 
 ---
 ## Gestión de usuarios
