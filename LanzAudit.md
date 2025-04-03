@@ -272,7 +272,11 @@ He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE]
 
 ---
 ## Plantillas HTML usadas
-### `index.html` --> De AdminLTE
+### `base.html`
+He tomado como base el `index.html` de AdminLTE para coger la sidebar y la cabecera y heredarla en todas las plantillas con Jinja2. Esto me ha simplificado muchísimo el trabajo, ya que si quisiera cambiar 1 elemento de la sidebar por ejemplo, tendría que cambiarlo manualmente en todas las plantillas que tuvieran sidebar, pero con la herencia se cambiará en todas automáticamente.
+Además me ayuda a tenerlo todo más ordenado y organizado y a que tengan el mismo estilo sin variaciones.
+
+### `index.html`
 1. En `<head>`:
     - Título.
     - Metadatos.
@@ -283,7 +287,7 @@ He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE]
     - En el panel principal se verán algunas estadísticas principales como los 2 o 3 últimos escaneos, un gráfico con el número de escaneos por tipo y algunas estadísticas más.
     
 
-### `login.html` --> De AdminLTE
+### `login.html`
 1. En `<head>`:
     - Rutas de los estilos a mi carpeta `static/css`.
 
@@ -297,7 +301,7 @@ He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE]
     - Dejamos abajo un solo enlace de "He olvidado mi contraseña" que te redirige a un formulario para realizar una solicitud de restablecimiento de contraseña al administrador.
     - He añadido al final un script de validación que viene en uno de los formularios de ejemplos de AdminLTE, en `dist/pages/forms/general.html`. 
 
-### `forgot-password.html` --> Propia
+### `forgot-password.html`
 Es casi igual que la de login, pero tiene explicado que la página es para enviarle una solicitud al administrador para recuperar tu contraseña.
 Tiene 3 campos para introducir información que le llegará al administrador para que este se ponga en contacto con el usuario para restablecer su contraseña:
 - Correo electrónico del usuario
@@ -305,10 +309,10 @@ Tiene 3 campos para introducir información que le llegará al administrador par
 - Algún mensaje adicional --> Tiene un valor por defecto que es `""`, es decir, se enviará un texto vacío.
 También tiene el script de validación.
 
-### `license.html` --> Propia
+### `license.html`
 Una tarjeta informando sobre la licencia que uso en mi aplicación con un enlace a la licencia.
 
-### `faq.html` --> Propia
+### `faq.html`
 Otra tarjeta del mismo estilo que la de la licencia con las preguntas más frecuentes sobre el uso de mi aplicación.
 
 
@@ -316,8 +320,9 @@ Otra tarjeta del mismo estilo que la de la licencia con las preguntas más frecu
 ---
 ## Base de datos
 Antes de crear la base de datos, he hecho un análisis para ver qué necesito, qué voy a hacer y cómo lo voy a hacer.
+### Análisis inicial
 Voy a empezar por una base de datos simple con 3 tablas y ya iré ampliando conforme vaya necesitando cosas.
-### Tabla `users`
+#### Tabla `users`
 Esta tabla almacena la información de los usuarios del sistema.
 
 Atributos:
@@ -328,8 +333,7 @@ Atributos:
 - `profile_picture`: Foto de perfil del usuario.
 - `role`: Rol del usuario (Admin, Worker, Analyst). El Administrador podrá hacerlo todo además de gestionar los usuarios de la aplicación y recibir las solicitudes de recuperación de las contraseñas. Los Trabajadores serán los que realicen los escaneos y los Analistas solo verán las estadísticas y analizarán los resultados.
 - `created_at`: Fecha y hora en que se creó el usuario.
-
-### Tabla `scans`
+#### Tabla `scans`
 Esta tabla almacena los escaneos realizados por los usuarios.
 
 Atributos:
@@ -339,9 +343,7 @@ Atributos:
 - `scan_parameters`: Parámetros del escaneo.
 - `status`: Estado del escaneo.
 - `created_at`: Fecha y hora en que se realizó el escaneo.
-
-
-### Tabla `scan_results`
+#### Tabla `scan_results`
 Esta tabla almacena los resultados de cada escaneo.
 
 Atributos:
@@ -350,4 +352,172 @@ Atributos:
 - `result`: Descripción o detalle del resultado (por ejemplo, "vulnerabilidad encontrada", "puerto abierto").
 - `created_at`: Fecha y hora en que se generó el resultado.
 
+### Modelo Entidad - Relación
+Ahora una vez que sé lo que necesito, voy a hacer el modelo ER para ver qué relación tienen mis tablas:
 
+![Diagrama ER]("Diagrama ER LanzAuditDB.png")
+
+### Diccionario de Datos y Modelo Lógico o Relacional
+Una vez hecho esto, también he hecho el Diccionario de Datos y el Modelo Lógico.
+
+### Conexión de la base de datos con Flask (`en app.py`)
+1. Instalamos las dependencias necesarias
+```bash
+pip3 install Flask-SQLAlchemy
+pip3 install pymysql
+```
+
+2. En `app.py`, configuramos la conexión a la base de datos:
+```python
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
+
+app = Flask(__name__)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB'
+
+db = SQLAlchemy(app)
+```
+Importamos text también porque en SQLAlchemy 2.0, las consultas SQL deben envolverse con `text()`.
+
+3. Probamos la conexión creando una nueva ruta en `app.py` para probar si estamos conectados correctamente o no:
+```python
+@app.route('/test_db')
+def test_db():
+    try:
+        db.session.execute(text('SELECT 1'))  # Consulta corregida
+        return "Conexión exitosa a la base de datos!"
+    except Exception as e:
+        return f"Error de conexión: {str(e)}"
+```
+
+4. Vamos a `http://localhost:5000/test_db` y comprobamos que se ha hecho una conexión exitosa a la base de datos.
+
+### Conexión y configuración de la base de datos con la nueva estructura de proyecto
+Usaremos el archivo `models.py` para definir todo lo relacionado con la base de datos:
+```python
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+
+db = SQLAlchemy()
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), nullable=False, unique=True)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    profile_picture = db.Column(db.String(255), nullable=True)
+    role = db.Column(db.Enum('Admin', 'Worker', 'Analyst', name='user_roles'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+class Scan(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    scan_type = db.Column(db.Enum('Puertos', 'WordPress', name='scan_type_enum'), nullable=False)
+    scan_parameters = db.Column(db.JSON, nullable=True)
+    status = db.Column(db.Enum('Pendiente', 'En Progreso', 'Completado', 'Fallido', name='status_enum'), default='Pendiente')
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref=db.backref('scans', lazy=True))
+
+    def __repr__(self):
+        return f'<Scan {self.id} - {self.scan_type}>'
+
+class ScanResult(db.Model):
+    __tablename__ = 'scan_results'
+
+    id = db.Column(db.Integer, primary_key=True)
+    scan_id = db.Column(db.Integer, db.ForeignKey('scan.id'), nullable=False)
+    result = db.Column(db.JSON, default=None)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    scan = db.relationship('Scan', backref=db.backref('scan_results', lazy=True))
+
+    def __repr__(self):
+        return f'<ScanResult {self.id}>'
+
+```
+
+Y ahora usamos Flask-Migrate para hacer la migración de la base de datos y poder hacer cambios en ella a traves de SQLAlchemy y pymysql:
+1. Inicializamos la base de datos
+```bash
+flask db init
+```
+2. Generamos la migración y le damos un nombre
+```bash
+flask db migrate -m "Inicializando la base de datos"
+```
+3. Aplicamos la migración después de asegurarnos de que todo está bien para actualizar nuestra base de datos
+```bash
+flask db upgrade
+```
+
+Cada vez que hagamos un cambio, haremos:
+1. Generamos la migración y le damos un nombre:
+```bash
+flask db migrate -m "Añadiendo la tabla Scan"
+```
+2. Y aplicamos la migración:
+```bash
+flask db upgrade
+```
+
+---
+## Reorganización de la estructura del proyecto
+Conforme he ido desarrollando, me he dado cuenta de que `app.py` se va a sobrecargar demasiado, por lo que después de investigar y ver varios ejemplos de proyectos con Flask, he llegado a la conclusión de que voy a dividir mi proyecto en:
+- `app.py` --> La aplicación Flask
+- `config.py` --> Para definir la configuración de la base de datos y cualquier otro ajuste
+- `models.py` --> Para la inicialización de la base de datos y la definición de modelos dentro de la misma
+- `routes.py` --> Para las rutas
+
+También crearé un archivo `.env` que no se subirá a GitHub (lo añadiré a mi `.gitignore`) para escribir ahí datos sensibles como la clave secreta de Flask, la URI a mi base de datos... Luego las importaré en sus archivos correspondientes (`config.py`) para usarlas con `python-dotenv`.
+
+### `.env`
+Para configurar mi proyecto con variables de entorno en un archivo `.env`:
+1. **Instalamos python-dotenv**
+```bash
+pip3 install python-dotenv
+```
+2. **Creamos el archivo .env en la raíz del proyecto y le añadimos los datos sensibles**
+```bash
+nano .env
+```
+La clave secreta la he generado con mi proyecto ![PassGen](https://github.com/Xerezanoo/PassGen).
+```
+SECRET_KEY=69K@i2WlPyy&
+DATABASE_URL=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
+```
+3. **Añadimos `.env` al archivo `.gitignore`**
+4. **Modificamos `config.py` para usar las variables del `.env`**
+```python
+import os
+from dotenv import load_dotenv
+
+# Cargar las variables de entorno desde el archivo .env
+load_dotenv()
+
+class Config:
+    SECRET_KEY = os.getenv('SECRET_KEY')  # Lee el SECRET_KEY del archivo .env
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')  # Lee la URL de la base de datos
+```
+5. **Modificamos `app.py` para usar la configuración**
+```python
+from flask import Flask
+from config import Config
+
+app = Flask(__name__)
+app.config.from_object(Config)
+```
+6. **Reiniciamos la aplicación**
+
+
+---
+## Gestión de usuarios
+Como LanzAudit está pensado para empresas, no sería lógico que cualquiera se pudiera registrar en la aplicación, cambiarse su contraseña...
+Para ello, he creado una página de gestión de usuarios a la cual solo tiene acceso el Administrador de la plataforma, que será quien cree o elimine los usuarios, les asigne o cambie su rol, les cambie la contraseña...
+
+La plantilla HTML usada es muy parecida a la de login, pero con un formulario para creación y edición de usuarios.

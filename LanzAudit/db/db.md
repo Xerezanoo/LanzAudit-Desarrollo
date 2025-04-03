@@ -1,6 +1,6 @@
-## Tabla `users`
+## Tabla `user`
 ```mysql
-CREATE TABLE users (
+CREATE TABLE user (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(150) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -11,16 +11,16 @@ CREATE TABLE users (
 );
 ```
 
-## Tabla `scans`
+## Tabla `scan`
 ```mysql
-CREATE TABLE scans (
+CREATE TABLE scan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     scan_type ENUM('Puertos', 'WordPress') NOT NULL,
     scan_parameters JSON DEFAULT NULL,
     status ENUM('Pendiente', 'En Progreso', 'Completado', 'Fallido') DEFAULT 'Pendiente',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
 ```
 
@@ -31,6 +31,6 @@ CREATE TABLE scan_results (
     scan_id INT NOT NULL,
     result JSON DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE
+    FOREIGN KEY (scan_id) REFERENCES scan(id) ON DELETE CASCADE
 );
 ```

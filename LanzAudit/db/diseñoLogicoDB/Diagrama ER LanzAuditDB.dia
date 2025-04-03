@@ -90,6 +90,7 @@
   </dia:diagramdata>
   <dia:layer name="Background" visible="true" connectable="false"/>
   <dia:layer name="Background" visible="true" connectable="false"/>
+  <dia:layer name="Background" visible="true" connectable="false"/>
   <dia:layer name="Background" visible="true" connectable="true"/>
   <dia:layer name="Background" visible="true" connectable="true" active="true">
     <dia:object type="Flowchart - Box" version="0" id="O0">
@@ -117,7 +118,7 @@
       <dia:attribute name="text">
         <dia:composite type="text">
           <dia:attribute name="string">
-            <dia:string>#users#</dia:string>
+            <dia:string>#user#</dia:string>
           </dia:attribute>
           <dia:attribute name="font">
             <dia:font family="sans" style="0" name="Helvetica"/>
@@ -162,7 +163,7 @@
       <dia:attribute name="text">
         <dia:composite type="text">
           <dia:attribute name="string">
-            <dia:string>#scans#</dia:string>
+            <dia:string>#scan#</dia:string>
           </dia:attribute>
           <dia:attribute name="font">
             <dia:font family="sans" style="0" name="Helvetica"/>
@@ -1115,7 +1116,7 @@
       <dia:attribute name="text">
         <dia:composite type="text">
           <dia:attribute name="string">
-            <dia:string>#hacen#</dia:string>
+            <dia:string>#hace#</dia:string>
           </dia:attribute>
           <dia:attribute name="font">
             <dia:font family="sans" style="0" name="Helvetica"/>
@@ -1160,7 +1161,7 @@
       <dia:attribute name="text">
         <dia:composite type="text">
           <dia:attribute name="string">
-            <dia:string>#tienen#</dia:string>
+            <dia:string>#tiene#</dia:string>
           </dia:attribute>
           <dia:attribute name="font">
             <dia:font family="sans" style="0" name="Helvetica"/>
@@ -1420,7 +1421,7 @@
         <dia:point val="21.5255,8.97787"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="21.5255,8.27099;22.8349,9.21162"/>
+        <dia:rectangle val="21.5255,8.29287;22.813,9.16787"/>
       </dia:attribute>
       <dia:attribute name="text">
         <dia:composite type="text">
@@ -1453,7 +1454,7 @@
         <dia:point val="33.2775,20.4125"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="33.2775,19.7056;34.7094,20.6463"/>
+        <dia:rectangle val="33.2775,19.7275;34.6875,20.6025"/>
       </dia:attribute>
       <dia:attribute name="text">
         <dia:composite type="text">
@@ -1519,7 +1520,7 @@
         <dia:point val="29.502,8.97787"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="29.502,8.25812;30.6117,9.21487"/>
+        <dia:rectangle val="29.502,8.28037;30.5895,9.17037"/>
       </dia:attribute>
       <dia:attribute name="text">
         <dia:composite type="text">

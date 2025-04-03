@@ -1,89 +1,43 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>LanzAudit | Licencia</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="title" content="LanzAudit | Licencia" />
-    <meta name="author" content="Juan García Lanza" />
-    <meta
-      name="description"
-      content="LanzAudit es una aplicación web para realizar y gestionar auditorías de seguridad sin necesidad de conocimientos técnicos avanzados en Ciberseguridad."
-    />
-    <meta
-      name="keywords"
-      content="auditoria seguridad vulnerabilidad dashboard"
-    />
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
-      integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q="
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
-      integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg="
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI="
-      crossorigin="anonymous"
-    />
-    <link rel="stylesheet" href="../static/css/adminlte.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css"
-      integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0="
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css"
-      integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4="
-      crossorigin="anonymous"
-    />
-  </head>
-  <body class="hold-transition login-page">
-    <div class="container mt-5">
-        <div class="card card-outline card-primary" style="width: 100%; max-width: 600px; margin: 0 auto;">
-            <div class="card-header text-center">
-                <h4 class="m-0">Preguntas Frecuentes (FAQ)</h4>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <h5><strong>¿Qué es LanzAudit?</strong></h5>
-                    <p>LanzAudit es una aplicación web para realizar auditorías de seguridad con escaneos de puertos y vulnerabilidades en empresas sin necesidad de requisitos técnicos avanzados en Ciberseguridad.</p>
-                </div>
-                <div class="mb-3">
-                    <h5><strong>¿Cómo puedo realizar un escaneo?</strong></h5>
-                    <p>Inicia sesión en tu cuenta, ve a la sección "Realizar Escaneos" y selecciona las opciones que desees.</p>
-                </div>
-                <div class="mb-3">
-                    <h5><strong>¿Qué tipos de escaneos puedo realizar?</strong></h5>
-                    <p>Puedes realizar escaneos de puertos, vulnerabilidades o específicos de CMS como WordPress y Joomla.</p>
-                </div>
-                <div class="mb-3">
-                    <h5><strong>¿Puedo ver los resultados de escaneos anteriores?</strong></h5>
-                    <p>Sí, los resultados anteriores estarán disponibles en la sección "Resultados y Estadísticas".</p>
-                </div>
-                <div class="mb-3">
-                    <h5><strong>¿Puedo realizar escaneos programados?</strong></h5>
-                    <p>No, actualmente LanzAudit no permite escaneos programados.</p>
-                </div>
-                <div class="mb-3">
-                    <h5><strong>¿Cómo puedo darme de alta en la aplicación?</strong></h5>
-                    <p>No puedes hacerlo. El administrador es el único que podrá crear y gestionar las cuentas de usuario. Si pierde la contraseña por cualquier motivo, tendrá que darle a 'Recuperar mi contraseña' en la pantalla de inicio de sesión para enviarle una solicitud de recuperación al administrador.</p>
-                </div>
-                <div class="mb-3">
-                    <h5><strong>¿Tienes alguna otra pregunta?</strong></h5>
-                    <p>Contacta con nosotros en info@lanzaudit.com.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | FAQ{% endblock %}
+{% block page_title %}FAQ{% endblock %}
+{% block page_title_2 %}FAQ{% endblock %}
+
+{% block content %}
+  <div class="card card-outline card-primary" style="width: 100%; max-width: 600px; margin: 0 auto;">
+      <div class="card-header text-center">
+          <h3 class="m-0">Preguntas Frecuentes (FAQ)</h4>
+      </div>
+      <div class="card-body">
+          <div class="mb-3">
+              <h5><strong>¿Qué es LanzAudit?</strong></h5>
+              <p>LanzAudit es una aplicación web para realizar auditorías de seguridad en empresas sin necesidad de conocimientos técnicos avanzados en Ciberseguridad.</p>
+          </div>
+          <div class="mb-3">
+              <h5><strong>¿Cómo puedo realizar un escaneo?</strong></h5>
+              <p>Inicia sesión en tu cuenta, ve a la sección "Realizar Escaneos" y selecciona las opciones que desees.</p>
+          </div>
+          <div class="mb-3">
+              <h5><strong>¿Qué tipos de escaneos puedo realizar?</strong></h5>
+              <p>Ahora mismo puedes realizar escaneos de puertos o de páginas WordPress.</p>
+          </div>
+          <div class="mb-3">
+              <h5><strong>¿Puedo ver los resultados de escaneos anteriores?</strong></h5>
+              <p>Sí, los resultados estarán disponibles en la sección "Resultados y Estadísticas".</p>
+          </div>
+          <div class="mb-3">
+              <h5><strong>¿Puedo realizar escaneos programados?</strong></h5>
+              <p>No, actualmente LanzAudit no permite escaneos programados.</p>
+          </div>
+          <div class="mb-3">
+              <h5><strong>¿Cómo puedo darme de alta en la aplicación?</strong></h5>
+              <p>No puedes hacerlo, solo el Administrador podrá crear y gestionar las cuentas de usuario. Si pierde su contraseña por cualquier motivo, tendrá que enviarle una solicitud de recuperación al Administrador.</p>
+          </div>
+          <div class="mb-3">
+              <h5><strong>¿Tienes alguna otra pregunta?</strong></h5>
+              <p>Contacta con nosotros en info@lanzaudit.com.</p>
+          </div>
+      </div>
+  </div>
+{% endblock %}

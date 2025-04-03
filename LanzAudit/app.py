@@ -1,26 +1,22 @@
-from flask import Flask, render_template
+# app.py
 
+# Importación de las librerías y objetos necesarios
+from flask import Flask
+from config import Config
+from models import db
+from flask_migrate import Migrate
+
+# Inicialización de la aplicación Flask y carga de la configuración desde Config
 app = Flask(__name__)
+app.config.from_object(Config)
 
-@app.route('/')
-def login():
-    return render_template("login.html")
+# Conexión de la base de datos con la aplicación Flask e inicialización del sistema de migración
+db.init_app(app)
+migrate = Migrate(app, db)
 
-@app.route('/password-recovery')
-def passwordRecovery():
-    return render_template("password-recovery.html")
+# Importación de todas las rutas del proyecto
+from routes import *
 
-@app.route('/dashboard')
-def home():
-    return render_template("index.html")
-
-@app.route('/faq')
-def faq():
-    return render_template("faq.html")
-
-@app.route('/license')
-def license():
-    return render_template("license.html")
-
+# Ejecución de la aplicación Flask
 if __name__ == "__main__":
     app.run(debug=True)
