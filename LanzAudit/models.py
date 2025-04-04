@@ -15,6 +15,8 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(255), nullable=False)
     profile_picture = db.Column(db.String(255), nullable=True)
     role = db.Column(db.Enum('Admin', 'Worker', 'Analyst', name='user_roles'), nullable=False)
+    password_reset_requested = db.Column(db.Boolean, default=False)
+    password_reset_requested_at = db.Column(db.DateTime, default=None)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __repr__(self):

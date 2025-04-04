@@ -33,7 +33,7 @@
       integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI="
       crossorigin="anonymous"
     />
-    <link rel="stylesheet" href="../static/css/adminlte.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/adminlte.css') }}" />
   </head>
 
   <!--begin::Body-->
@@ -41,7 +41,7 @@
     <div class="login-box">
       <div class="login-logo">
         <strong><b>LanzAudit</b></strong>
-        <img src="../static/assets/img/LanzAuditLogo-Negro.png" alt="Logo LanzAudit en color negro"></img>
+        <img src="{{ url_for('static', filename='assets/img/LanzAuditLogo-Negro.png') }}" alt="Logo LanzAudit en color negro"></img>
       </div>
       <!-- /.login-logo -->
       <div class="card">
@@ -49,17 +49,20 @@
           <p class="login-box-msg">Inicia sesión para acceder al panel</p>
           <!--begin::Mensajes Flash-->
           {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-              <div class="alert alert-danger" role="alert">
-                {% for category, message in messages %}
-                  <p>{{ message }}</p>
-                {% endfor %}
-              </div>
-            {% endif %}
+          {% if messages %}
+            <div class="alert-container">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
           {% endwith %}
           <!--end::Mensajes Flash-->
           <!--begin::Formulario Login-->
-          <form class="needs-validation" novalidate action="/" method="POST">
+          <form class="needs-validation" novalidate action="{{ url_for('login') }}" method="POST">
             <div class="input-group mb-3">
               <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required/>
               <div class="input-group-text"><span class="bi bi-envelope"></span></div>
