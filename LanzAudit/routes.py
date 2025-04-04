@@ -5,7 +5,7 @@ from flask import render_template, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 from models import db, User
-from app import app, mail # App Flask
+from app import app, mail   # App Flask
 from flask_mail import Message
 
 
