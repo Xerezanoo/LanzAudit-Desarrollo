@@ -5,7 +5,9 @@ from flask import render_template, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 from models import db, User
-from app import app # App Flask
+from app import app, mail # App Flask
+from flask_mail import Message
+
 
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
 @app.route('/', methods=['GET', 'POST'])
@@ -90,3 +92,10 @@ def logout():
     logout_user()
     flash('Se ha cerrado sesión correctamente', 'success')
     return redirect(url_for('login'))
+
+@app.route('/send_test_email')
+def send_test_email():
+    msg = Message('Test Email', recipients=['juangarcialanzarendon@gmail.com'])
+    msg.body = 'Este es un correo de prueba.'
+    mail.send(msg)
+    return 'Correo enviado con éxito'
