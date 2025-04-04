@@ -564,3 +564,157 @@ Como LanzAudit está pensado para empresas, no sería lógico que cualquiera se 
 Para ello, he creado una página de gestión de usuarios a la cual solo tiene acceso el Administrador de la plataforma, que será quien cree o elimine los usuarios, les asigne o cambie su rol, les cambie la contraseña...
 
 La plantilla HTML usada es muy parecida a la de login, pero con un formulario para creación y edición de usuarios.
+
+---
+## Flask-Login
+Vamos a usar Flask-Login para los manejos de sesión en mi aplicación.
+
+1. **Instalación de Flask-Login**
+```bash
+pip3 install flask-login
+```
+
+2. **Configurar Flask-Login en tu aplicación**
+En el archivo app.py, debes inicializar Flask-Login, configurar el cargador de usuarios (user_loader) y asignar la vista a la que se redirige cuando un usuario no está autenticado.
+
+Añade a app.py lo siguiente. La configuración de Flask-Login lo haremos debajo de la inicialización de la base de datos y/o de otras extensiones:
+```python
+from flask_login import LoginManager
+
+# Inicialización de Flask-Login
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'  # Aquí defines la vista de login que se redirigirá si no hay sesión activa
+
+# Cargar el usuario
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+```
+--> En este caso, `login_manager.user_loader` es una función que Flask-Login usará para cargar un usuario basándose en el `user_id`. Este `user_id` se almacena en la sesión, por lo que Flask-Login puede recuperar al usuario autenticado en cada solicitud.
+
+3. **Agregar la gestión de sesiones con Flask-Login**
+Para manejar el inicio de sesión y la autenticación de un usuario, debes modificar la ruta de login en `routes.py` para hacer uso de las funcionalidades de Flask-Login.
+Modifica la ruta de login en `routes.py` de la siguiente manera:
+```python
+from flask import render_template, redirect, url_for, flash, request
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, login_required, logout_user, current_user
+from models import db, User
+from app import app  # Asegúrate de importar la app desde app.py
+
+# Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if not User.query.filter_by(username="LanzAdmin").first():
+        return redirect(url_for('setupAdmin'))
+    else:
+        if request.method == 'POST':
+            email = request.form['email']
+            password = request.form['password']
+
+            user = User.query.filter_by(email=email).first()
+            if user and check_password_hash(user.password_hash, password):
+                login_user(user)
+                return redirect(url_for('home'))
+            else:
+                flash('Correo electrónico o contraseña incorrectos', 'danger')
+    return render_template('login.html')
+
+# Ruta para la configuración inicial del usuario LanzAdmin y la creación del mismo
+@app.route('/setup-admin', methods=['GET', 'POST'])
+def setupAdmin():
+    adminExists = User.query.filter_by(username="LanzAdmin").first()
+    if adminExists:
+        flash('El usuario Administrador LanzAdmin ya está creado', 'warning')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        username = 'LanzAdmin'
+
+        if User.query.filter_by(email=email).first():
+            flash('El correo electrónico introducido ya está registrado. Usa otro diferente', 'danger')
+            return redirect(url_for('setupAdmin'))
+
+        lanzAdmin = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password),
+            role='Admin'
+        )
+
+        db.session.add(lanzAdmin)
+        db.session.commit()
+
+        flash('Usuario LanzAdmin creado con éxito. Ahora puedes iniciar sesión', 'success')
+        return redirect(url_for('login'))
+
+    return render_template("setup-admin.html")
+
+# Ruta para la vista de dashboard (solo accesible si el usuario está autenticado)
+@app.route('/dashboard')
+@login_required
+def home():
+    return render_template('index.html')
+
+# Ruta para el logout (cerrar sesión)
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Se ha cerrado sesión correctamente', 'success')
+    return redirect(url_for('login'))
+```
+
+4. **Plantilla login.html**
+En tu plantilla de login (`login.html`), ya estás pidiendo un correo y una contraseña. Asegúrate de que el formulario esté configurado para enviar la información correctamente a la ruta de login (`action="{{ url_for('login') }}"`).
+
+5. **Control de acceso con @login_required**
+En las vistas donde deseas restringir el acceso a usuarios autenticados, usa el decorador `@login_required`. Como se ve en la ruta `/dashboard`, el acceso está restringido a usuarios que hayan iniciado sesión:
+```python
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+```
+
+6. **Manejo de la sesión**
+Cuando el usuario inicia sesión correctamente, Flask-Login se encarga de gestionar la sesión del usuario. Puedes acceder al usuario actual a través de current_user en cualquier parte de tu aplicación:
+```python
+from flask_login import current_user
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html', user=current_user)
+```
+
+Resumen de los cambios importantes:
+`user_loader`: Se configura para cargar el usuario desde la base de datos usando el user_id almacenado en la sesión.
+
+`login_user`: Autentica al usuario.
+
+`@login_required`: Se usa para proteger las vistas que solo deben ser accesibles para usuarios autenticados.
+
+`logout_user`: Cierra la sesión del usuario.
+
+
+---
+## Mensajes Flash
+Usaremos este bloque justo antes de la etiqueta `<form>` de los formularios para poder mostrar en el frontend los mensajes de error que envía el backend:
+```html
+          <!--begin::Mensajes Flash-->
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="alert-container">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+          <!--end::Mensajes Flash-->
+```
