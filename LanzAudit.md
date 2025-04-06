@@ -718,3 +718,58 @@ Usaremos este bloque justo antes de la etiqueta `<form>` de los formularios para
         {% endwith %}
           <!--end::Mensajes Flash-->
 ```
+
+---
+## Flask-Mail
+Vamos a configurar Flask-Mail para poder enviar un correo a los usuarios administradores cuando un usuario de la plataforma solicite una recuperación de su contraseña.
+Para ello:
+1. Nos creamos una cuenta de correo desde la que vamos a mandar los correos. En mi caso, la he creado con Google y la he llamado `lanzaudit@gmail.com`
+
+2. Ahora vamos a activar la verificación en 2 pasos
+
+3. Una vez activada, vamos a "Contraseñas de aplicación", en Seguridad de nuestra cuenta Google
+
+4. Creamos una nueva contraseña de aplicación y la copiamos
+
+5. Ahora, tenemos que modificar los archivos de nuestra aplicación para implementar Flask-Mail:
+`app.py`
+```python
+from flask_mail import Mail
+
+mail = Mail(app)
+```
+
+`config.py`
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    SECRET_KEY = os.getenv('SECRET_KEY')    # Recupera la clave del .env
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI') # Recupera la URI del .env
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Mejora el rendimiento al dejar de seguir las modificaciones de los objetos de la BD
+    MAIL_SERVER = os.getenv('MAIL_SERVER')  # Servidor de correo
+    MAIL_PORT = os.getenv('MAIL_PORT')  # Puerto para TLS
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS')    # Activar TLS
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')  # Correo (para autenticarme)
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')  # Contraseña de la cuenta
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')  # El correo desde el que se enviarán los mensajes (puede ser el mismo que MAIL_USERNAME o distinto)
+```
+
+`.env`
+```
+SECRET_KEY=[tuContraseña]
+DATABASE_URI=mysql+pymysql://LanzAdmin:[tuContraseña]/LanzAuditDB
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=[tuCorreo]@gmail.com
+MAIL_PASSWORD=[tuContraseñaDeAplicacion]
+MAIL_DEFAULT_SENDER=[tuCorreo]@gmail.com
+```
+
+Y listo, ya estará configurado para usarse.
+
+
