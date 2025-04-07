@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Editar Usuario{% endblock %}
+{% block page_title %}Editar Usuario{% endblock %}
+{% block page_title_2 %}Editar Usuario{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Editar Usuario</h3>
+    </div>
+    <div class="card-body">
+        <form class="needs-validation" novalidate method="POST" action="{{ url_for('editUser', user_id=user.id) }}">
+            <div class="input-group mb-3">
+                <input type="text" name="username" class="form-control" placeholder="Nombre de usuario" value="{{ user.username }}" {% if user.username == 'LanzAdmin' %}disabled{% endif %} required>
+                <div class="input-group-text"><span class="bi bi-person"></span></div>
+                <div class="invalid-feedback">Por favor, introduce un nombre de usuario.</div>
+            </div>
+
+            <div class="input-group mb-3">
+                <input type="email" name="email" class="form-control" placeholder="Correo electrónico" value="{{ user.email }}" required>
+                <div class="input-group-text"><span class="bi bi-envelope"></span></div>
+                <div class="invalid-feedback">Por favor, introduce un correo electrónico válido.</div>
+            </div>
+
+            <div class="input-group mb-3">
+                <input type="password" name="password" class="form-control" placeholder="Contraseña (Deja en blanco si no deseas cambiarla)">
+                <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
+                <div class="invalid-feedback">Por favor, introduce una contraseña.</div>
+            </div>
+
+            <div class="input-group mb-3">
+                <select name="role" class="form-control" {% if user.username == 'LanzAdmin' %}disabled{% endif %} required>
+                    <option value="{{ user.role }}" selected>{{ user.role }}</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Worker">Worker</option>
+                    <option value="Analyst">Analyst</option>
+                </select>
+                <div class="input-group-text"><span class="bi bi-person-fill"></span></div>
+                <div class="invalid-feedback">Por favor, selecciona un rol.</div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Actualizar Usuario</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- begin::Script Validación -->
+<script>
+  (() => {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        'submit',
+        (event) => {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        },
+        false,
+      );
+    });
+  })();
+</script>
+<!-- end::Script Validación -->
+{% endblock %}

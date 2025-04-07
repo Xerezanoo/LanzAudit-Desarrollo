@@ -59,7 +59,7 @@
                 <i class="bi bi-list"></i>
               </a>
             </li>
-            <li class="nav-item d-none d-md-block"><img src="../static/assets/img/LanzAuditLogo-Negro.png" width="40%"></img></li>
+            <li class="nav-item d-none d-md-block"><img src="{{ url_for('static', filename="assets/img/LanzAuditLogo-Negro.png") }}" width="40%"></img></li>
           </ul>
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
@@ -70,12 +70,12 @@
             </li>
             <li class="nav-item dropdown user-menu">
               <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                <img src="../static/assets/img/user2-160x160.jpg" class="user-image rounded-circle shadow" alt="User Image" />
+                <img src="{{ url_for('static', filename="assets/img/user2-160x160.jpg") }}" class="user-image rounded-circle shadow" alt="User Image" />
                 <span class="d-none d-md-inline">Alexander Pierce</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <li class="user-header text-bg-primary">
-                  <img src="../static/assets/img/user2-160x160.jpg" class="rounded-circle shadow" alt="User Image" />
+                  <img src="{{ url_for('static', filename="assets/img/user2-160x160.jpg") }}" class="rounded-circle shadow" alt="User Image" />
                   <p>
                     Alexander Pierce - Web Developer
                     <small>Member since Nov. 2023</small>
@@ -95,7 +95,7 @@
       <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
         <div class="sidebar-brand">
           <a href="/dashboard" class="brand-link">
-            <img src="../static/assets/img/LanzAuditLogo-Blanco.png" alt="Logo LanzAudit" class="brand-image opacity-75 shadow" />
+            <img src="{{ url_for('static', filename="assets/img/LanzAuditLogo-Blanco.png") }}" alt="Logo LanzAudit" class="brand-image opacity-75 shadow" />
             <span class="brand-text fw-light">LanzAudit</span>
           </a>
         </div>
@@ -108,18 +108,21 @@
                   <p>Inicio</p>
                 </a>
               </li>
+              {% if current_user.role == 'Admin' or current_user.role == 'Worker' %}
               <li class="nav-item">
                 <a href="/escaneos" class="nav-link">
                   <i class="nav-icon bi bi-search"></i>
                   <p>Realizar Escaneos</p>
                 </a>
               </li>
+              {% endif %}
               <li class="nav-item">
                 <a href="/estadisticas" class="nav-link">
                   <i class="nav-icon bi bi-bar-chart-fill"></i>
                   <p>Resultados y Estadísticas</p>
                 </a>
               </li>
+              {% if current_user.role == 'Admin' %}
               <li class="nav-header">ADMINISTRACIÓN</li>
               <li class="nav-item">
                 <a href="/manage-users" class="nav-link">
@@ -127,6 +130,7 @@
                   <p>Gestión de Usuarios</p>
                 </a>
               </li>
+              {% endif %}
               <li class="nav-header">MÁS</li>
               <li class="nav-item">
                 <a href="/faq" class="nav-link">
@@ -148,22 +152,25 @@
       <!-- Main Content -->
       <main class="app-main">
         <div class="app-content-header">
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-sm-6"><h3 class="mb-0">{% block page_title %}{% endblock %}</h3></div>
-              <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                  <li class="breadcrumb-item"><a href="/dashboard">Inicio</a></li>
-                  <li class="breadcrumb-item">{% block page_title_2 %}{% endblock %}</a></li>
-                </ol>
-              </div>
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-6"><h3 class="mb-0">{% block page_title %}{% endblock %}</h3></div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-end">
+                            <li class="breadcrumb-item"><a href="/dashboard">Inicio</a></li>
+                            {% if 'addUser' in request.endpoint or 'editUser' in request.endpoint %}
+                            <li class="breadcrumb-item"><a href="{{ url_for('manageUsers') }}">Gestión de Usuarios</a></li>
+                            {% endif %}
+                            <li class="breadcrumb-item">{% block page_title_2 %}{% endblock %}</li>
+                        </ol>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
         <div class="app-content">
-          <div class="container-fluid">
-            {% block content %}{% endblock %}
-          </div>
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
         </div>
       </main>
 
@@ -195,7 +202,7 @@
       crossorigin="anonymous"
     ></script>
     <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
-    <script src="../static/js/adminlte.js"></script>
+    <script src="{{ url_for('static', filename="js/adminlte.js") }}"></script>
     <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
     <script>
       const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';

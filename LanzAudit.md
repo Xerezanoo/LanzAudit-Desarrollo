@@ -563,8 +563,15 @@ DATABASE_URI=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
 Como LanzAudit está pensado para empresas, no sería lógico que cualquiera se pudiera registrar en la aplicación, cambiarse su contraseña...
 Para ello, he creado una página de gestión de usuarios a la cual solo tiene acceso el Administrador de la plataforma, que será quien cree o elimine los usuarios, les asigne o cambie su rol, les cambie la contraseña...
 
-La plantilla HTML usada es muy parecida a la de login, pero con un formulario para creación y edición de usuarios.
+La plantilla HTML usada contiene una tabla donde aparecen todos los usuarios registrados en la plataforma, con su id, nombre de usuario, email, rol, si ha solicitado o no una recuperación de contraseña y un botón para editarlo o eliminarlo.
 
+Al usuario LanzAdmin no se le podrá eliminar y tampoco cambiar el nombre de usuario ni el rol, pero a los demás sí se les puede cambiar todo o eliminarlos.
+
+También incluye un botón para añadir un nuevo usuario a la plataforma.
+
+Todos los formularios (de edición y de creación) tienen validación para que se introduzcan todos los campos correctamente y no hayan problemas al enviar la solicitud.
+
+También he modificado el archivo `base.html` para que en la sidebar solo aparezca esta página a los usuarios con el rol 'Admin'.
 ---
 ## Flask-Login
 Vamos a usar Flask-Login para los manejos de sesión en mi aplicación.
@@ -771,5 +778,7 @@ MAIL_DEFAULT_SENDER=[tuCorreo]@gmail.com
 ```
 
 Y listo, ya estará configurado para usarse.
+
+---
 
 
