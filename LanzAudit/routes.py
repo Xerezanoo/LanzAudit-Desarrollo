@@ -10,6 +10,9 @@ from models import db, User
 from app import app, mail
 from flask_mail import Message
 from sqlalchemy import func
+from PIL import Image
+from io import BytesIO
+import base64
 
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
 @app.route('/', methods=['GET', 'POST'])
@@ -255,11 +258,11 @@ def license():
 @login_required
 def profile():
     user = current_user
-    
+
     if request.method == 'POST':
         new_username = request.form.get('username')
         new_email = request.form.get('email')
-        image = request.files.get('image')
+        cropped_data = request.form.get('cropped_image')
 
         if new_email != user.email and new_username != user.username:
             existing_email = User.query.filter_by(email=new_email).first()
@@ -274,7 +277,7 @@ def profile():
                 flash('El correo electrónico ya está registrado', 'danger')
                 return redirect(url_for('profile'))
             user.email = new_email
-            
+
         if user.username != 'LanzAdmin' and new_username != user.username:
             existing_user = User.query.filter_by(username=new_username).first()
             if existing_user:
@@ -282,14 +285,21 @@ def profile():
                 return redirect(url_for('profile'))
             user.username = new_username
 
-        if image and image.filename != '':
-            filename = secure_filename(image.filename)
-            ext = os.path.splitext(filename)[1]
-            unique_filename = f"user_{user.id}{ext}"
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            image.save(image_path)
+        if cropped_data:
+            try:
+                header, encoded = cropped_data.split(",", 1)
+                image_data = base64.b64decode(encoded)
+                image = Image.open(BytesIO(image_data))
 
-            user.profile_picture = unique_filename
+                filename = f"user_{user.id}.png"
+                image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                image.save(image_path)
+
+                user.profile_picture = filename
+            except Exception as error:
+                flash('Error al procesar la imagen recortada', 'danger')
+                print(error)
+                return redirect(url_for('profile'))
 
         db.session.commit()
         flash('Perfil actualizado correctamente', 'success')
@@ -301,6 +311,22 @@ def profile():
         image_url = url_for('static', filename='profile_pics/default.png')
 
     return render_template('profile.html', image_url=image_url)
+
+# Ruta para eliminar la foto de perfil y volver a tener la predeterminada
+@app.route('/remove-profile-picture', methods=['POST'])
+@login_required
+def removeProfilePicture():
+    if current_user.profile_picture and current_user.profile_picture != 'default.png':
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], current_user.profile_picture)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        current_user.profile_picture = None
+        db.session.commit()
+        flash('Foto de perfil eliminada correctamente', 'success')
+    else:
+        flash('No tienes una foto de perfil para eliminar', 'warning')
+
+    return redirect(url_for('profile'))
 
 # Ruta para el logout (cerrar sesión)
 @app.route('/logout')

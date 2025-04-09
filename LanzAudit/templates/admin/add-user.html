@@ -22,7 +22,7 @@
       </div>
       {% endif %}
       {% endwith %}
-        <form class="needs-validation" novalidate method="POST" action="{{ url_for('addUser') }}">
+        <form action="{{ url_for('addUser') }}" method="POST" novalidate class="needs-validation">
             <div class="input-group mb-3">
                 <input type="text" name="username" class="form-control" placeholder="Nombre de usuario" required>
                 <div class="input-group-text"><span class="bi bi-person"></span></div>

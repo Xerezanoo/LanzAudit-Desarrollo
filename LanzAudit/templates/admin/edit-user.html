@@ -22,7 +22,7 @@
       </div>
       {% endif %}
       {% endwith %}
-        <form class="needs-validation" novalidate method="POST" action="{{ url_for('editUser', user_id=user.id) }}">
+        <form action="{{ url_for('editUser', user_id=user.id) }}" method="POST" novalidate class="needs-validation">
             <div class="input-group mb-3">
                 <input type="text" name="username" class="form-control" placeholder="Nombre de usuario" value="{{ user.username }}" {% if user.username == 'LanzAdmin' %}disabled{% endif %} required>
                 <div class="input-group-text"><span class="bi bi-person"></span></div>

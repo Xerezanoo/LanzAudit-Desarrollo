@@ -61,8 +61,8 @@
           {% endif %}
         {% endwith %}
           <!--end::Mensajes Flash-->
-          <!--begin::Formulario Login-->
-          <form class="needs-validation" novalidate action="{{ url_for('setupAdmin') }}" method="POST">
+
+          <form action="{{ url_for('setupAdmin') }}" method="POST" novalidate class="needs-validation">
             <div class="input-group mb-3">
               <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required/>
               <div class="input-group-text"><span class="bi bi-envelope"></span></div>
@@ -73,26 +73,20 @@
               <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
               <div class="invalid-feedback">Por favor, introduce una contraseña.</div>
             </div>
-            <!--begin::Row-->
             <div class="row">
-              <div class="col-8">
-              </div>
-              <!-- /.col -->
               <div class="col-12">
                 <div class="d-grid gap-2">
-                  <button type="submit" class="btn btn-primary">Crear LanzAdmin</button>
+                  <button type="submit" class="btn btn-primary" id="submit-btn">
+                    Crear LanzAdmin
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
                 </div>
               </div>
-              <!-- /.col -->
             </div>
-            <!--end::Row-->
           </form>
-          <!--end::Formulario Login-->
         </div>
-        <!-- /.login-card-body -->
       </div>
     </div>
-    <!-- /.login-box -->
+
     <!--begin::Third Party Plugin(OverlayScrollbars)-->
     <script
       src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
@@ -136,7 +130,7 @@
     </script>
     <!--end::OverlayScrollbars Configure-->
     <!--end::Script-->
-    <!-- begin::Script Validación -->
+    <!-- begin::Script Validación y Spinner botón -->
     <script>
       (() => {
         'use strict';
@@ -148,6 +142,11 @@
               if (!form.checkValidity()) {
                 event.preventDefault();
                 event.stopPropagation();
+              } else {
+                const submitButton = document.getElementById('submit-btn');
+                const spinner = document.getElementById('spinner');
+                submitButton.disabled = true;
+                spinner.classList.remove('d-none');
               }
               form.classList.add('was-validated');
             },
@@ -156,6 +155,6 @@
         });
       })();
     </script>
-    <!-- end::Script Validación -->
+    <!-- end::Script Validación y Spinner botón -->
   </body>
 </html>
