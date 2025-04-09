@@ -14,6 +14,16 @@ from PIL import Image
 from io import BytesIO
 import base64
 
+# Error 404 - Página no encontrada
+@app.errorhandler(404)
+def pageNotFound(error):
+    return render_template('error/404.html'), 404
+
+# Error 403 - Acceso denegado
+@app.errorhandler(403)
+def forbidden(error):
+    return render_template('error/403.html'), 403
+
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
 @app.route('/', methods=['GET', 'POST'])
 def login():
