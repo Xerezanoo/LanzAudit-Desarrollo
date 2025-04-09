@@ -13,8 +13,8 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI') # Recupera la URI del .env
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Mejora el rendimiento al dejar de seguir las modificaciones de los objetos de la BD
     MAIL_SERVER = os.getenv('MAIL_SERVER')  # Servidor de correo
-    MAIL_PORT = os.getenv('MAIL_PORT')  # Puerto para TLS
-    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS')    # Activar TLS
+    MAIL_PORT = int(os.getenv('MAIL_PORT'))  # Puerto para TLS
+    MAIL_USE_TLS = True    # Activar TLS
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')  # Correo (para autenticarme)
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')  # Contraseña de la cuenta
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')  # El correo desde el que se enviarán los mensajes (puede ser el mismo que MAIL_USERNAME o distinto)

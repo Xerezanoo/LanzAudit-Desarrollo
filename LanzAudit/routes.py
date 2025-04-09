@@ -1,14 +1,15 @@
 # routes.py
 
 # Importación de las librerías y objetos necesarios
+import os
 from flask import render_template, redirect, url_for, flash, request, abort
 from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.utils import secure_filename
 from flask_login import login_user, login_required, logout_user, current_user
 from models import db, User
-from app import app, mail   # App Flask
+from app import app, mail
 from flask_mail import Message
-from datetime import datetime, timezone
-
+from sqlalchemy import func
 
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
 @app.route('/', methods=['GET', 'POST'])
@@ -71,10 +72,12 @@ def passwordRecovery():
         user = User.query.filter_by(email=email).first()
 
         if user:
-            user.password_reset_requested = 1
-            user.password_reset_requested_at = datetime.utcnow()
-            db.session.commit()
+            if user.password_reset_requested:
+                flash('Ya hay una solicitud pendiente para este usuario.', 'warning')
+                return redirect(url_for('login'))
 
+            user.password_reset_requested = True
+            user.password_reset_requested_at = func.current_timestamp()
             db.session.commit()
 
             admins = User.query.filter_by(role='Admin').all()
@@ -86,13 +89,17 @@ def passwordRecovery():
             flash('Solicitud de recuperación enviada correctamente.', 'success')
             return redirect(url_for('login'))
 
-        flash('No se encontró el usuario con ese correo electrónico.', 'danger')
-        return redirect(url_for('passwordRecovery'))
+        flash('No se encontró ningún usuario con ese correo electrónico', 'danger')
+        return redirect(url_for('login'))
     return render_template("password-recovery.html")
 
 # Ruta para confirmar que se ha completado la recuperación de la contraseña de un usuario
 @app.route('/resolve-reset-request/<int:user_id>', methods=['GET', 'POST'])
+@login_required
 def resolveResetRequest(user_id):
+    if current_user.role != 'Admin':
+        abort(403)
+        
     user = User.query.get_or_404(user_id)
     
     if request.method == 'POST':
@@ -103,10 +110,10 @@ def resolveResetRequest(user_id):
             user.password_reset_requested = False
             user.password_reset_requested_at = None
             db.session.commit()
-            flash('Contraseña cambiada y solicitud resuelta.', 'success')
+            flash('Contraseña cambiada y solicitud resuelta', 'success')
             return redirect(url_for('manageUsers'))
 
-        flash('No se ha modificado la contraseña. La solicitud no ha sido resuelta.', 'warning')
+        flash('No se ha modificado la contraseña. La solicitud no ha sido resuelta', 'warning')
         return redirect(url_for('manageUsers'))
 
     return render_template('admin/resolve-reset-request.html', user=user)
@@ -116,18 +123,6 @@ def resolveResetRequest(user_id):
 @login_required
 def home():
     return render_template("index.html")
-
-# Ruta para la página de preguntas frecuentes (FAQ)
-@app.route('/faq')
-@login_required
-def faq():
-    return render_template("faq.html")
-
-# Ruta para la página de la licencia del software
-@app.route('/license')
-@login_required
-def license():
-    return render_template("license.html")
 
 # Ruta para la página de gestión de usuarios (solo para administradores)
 @app.route('/manage-users')
@@ -152,6 +147,12 @@ def addUser():
         password = request.form['password']
         role = request.form['role']
         
+        existing_user = db.session.query(User).filter((User.username == username) | (User.email == email)).first()
+        
+        if existing_user:
+            flash("El nombre de usuario o el correo electrónico ya están registrados", "danger")
+            return redirect(url_for('addUser'))
+        
         new_user = User(
             username=username,
             email=email,
@@ -162,7 +163,7 @@ def addUser():
         db.session.add(new_user)
         db.session.commit()
 
-        flash(f'Usuario {username} añadido correctamente.', 'success')
+        flash(f'Usuario {username} añadido correctamente', 'success')
         return redirect(url_for('manageUsers'))
 
     return render_template('admin/add-user.html')
@@ -180,13 +181,19 @@ def editUser(user_id):
         email = request.form['email']
         password = request.form['password']
         
+        existing_email = db.session.query(User).filter((User.email == email)).first()
+        
+        if existing_email:
+            flash("El correo electrónico ya está registrado", "danger")
+            return redirect(url_for('editUser', user_id=user.id))
+        
         if email:
             user.email = email
         if password:
             user.password_hash = generate_password_hash(password)
         
         db.session.commit()
-        flash('Usuario LanzAdmin actualizado correctamente.', 'success')
+        flash('Usuario LanzAdmin actualizado correctamente', 'success')
         return redirect(url_for('manageUsers'))
 
     if request.method == 'POST':
@@ -194,14 +201,21 @@ def editUser(user_id):
         email = request.form['email']
         password = request.form['password']
         role = request.form['role']
-
+        
+        existing_user = db.session.query(User).filter((User.username == username) | (User.email == email)).filter(User.id != user.id).first()
+        
+        if existing_user:
+            flash("El nombre de usuario o el correo electrónico ya están registrados", "danger")
+            return redirect(url_for('editUser', user_id=user.id))
+        
         user.username = username
         user.email = email
-        user.password_hash = generate_password_hash(password)
         user.role = role
+        if password:
+            user.password_hash = generate_password_hash(password)
         
         db.session.commit()
-        flash(f'Usuario {username} actualizado correctamente.', 'success')
+        flash(f'Usuario {username} actualizado correctamente', 'success')
         return redirect(url_for('manageUsers'))
 
     return render_template('admin/edit-user.html', user=user)
@@ -215,17 +229,78 @@ def deleteUser(user_id):
 
     user = User.query.get_or_404(user_id)
     
-    # Prevenir la eliminación de LanzAdmin
     if user.username == 'LanzAdmin':
-        flash('No puedes eliminar al usuario LanzAdmin.', 'danger')
+        flash('No puedes eliminar al usuario LanzAdmin', 'danger')
         return redirect(url_for('manageUsers'))
     
-    # Eliminar el usuario si no es LanzAdmin
     db.session.delete(user)
     db.session.commit()
-    flash(f'Usuario {user.username} eliminado correctamente.', 'success')
+    flash(f'Usuario {user.username} eliminado correctamente', 'success')
     return redirect(url_for('manageUsers'))
 
+# Ruta para la página de preguntas frecuentes (FAQ)
+@app.route('/faq')
+@login_required
+def faq():
+    return render_template("faq.html")
+
+# Ruta para la página de la licencia del software
+@app.route('/license')
+@login_required
+def license():
+    return render_template("license.html")
+
+# Ruta para la página de modificación del perfil de los usuarios
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    user = current_user
+    
+    if request.method == 'POST':
+        new_username = request.form.get('username')
+        new_email = request.form.get('email')
+        image = request.files.get('image')
+
+        if new_email != user.email and new_username != user.username:
+            existing_email = User.query.filter_by(email=new_email).first()
+            existing_user = User.query.filter_by(username=new_username).first()
+            if existing_email and existing_user:
+                flash('El correo electrónico y el nombre de usuario ya están registrados', 'danger')
+                return redirect(url_for('profile'))
+
+        if new_email != user.email:
+            existing_email = User.query.filter_by(email=new_email).first()
+            if existing_email:
+                flash('El correo electrónico ya está registrado', 'danger')
+                return redirect(url_for('profile'))
+            user.email = new_email
+            
+        if user.username != 'LanzAdmin' and new_username != user.username:
+            existing_user = User.query.filter_by(username=new_username).first()
+            if existing_user:
+                flash('El nombre de usuario ya está en uso', 'danger')
+                return redirect(url_for('profile'))
+            user.username = new_username
+
+        if image and image.filename != '':
+            filename = secure_filename(image.filename)
+            ext = os.path.splitext(filename)[1]
+            unique_filename = f"user_{user.id}{ext}"
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            image.save(image_path)
+
+            user.profile_picture = unique_filename
+
+        db.session.commit()
+        flash('Perfil actualizado correctamente', 'success')
+        return redirect(url_for('profile'))
+
+    if current_user.profile_picture:
+        image_url = url_for('static', filename='profile_pics/' + current_user.profile_picture)
+    else:
+        image_url = url_for('static', filename='profile_pics/default.png')
+
+    return render_template('profile.html', image_url=image_url)
 
 # Ruta para el logout (cerrar sesión)
 @app.route('/logout')

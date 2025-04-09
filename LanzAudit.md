@@ -597,7 +597,17 @@ login_manager.login_view = 'login'  # Aquí defines la vista de login que se red
 def load_user(user_id):
     return User.query.get(int(user_id))
 ```
---> En este caso, `login_manager.user_loader` es una función que Flask-Login usará para cargar un usuario basándose en el `user_id`. Este `user_id` se almacena en la sesión, por lo que Flask-Login puede recuperar al usuario autenticado en cada solicitud.
+--> En este caso, `login_manager.user_loader` es una función que Flask-Login usará para cargar un usuario basándose en el `user_id`. Este `user_id` se almacena en la sesión, por lo que Flask-Login puede recuperar al usuario autenticado en cada solicitud (con `current_user`).
+
+Cuando hacemos login (`login_user(user)`), Flask-Login guarda el user.id en la sesión del navegador (en una cookie segura).
+En cada petición con `current_user`, Flask-Login lee el `user_id` de la sesión, llama a la función con el decorador `@login_manager.user_loader`:
+```python
+@login_manager.user_loader
+def loadUser(user_id):
+    return User.query.get(int(user_id))
+```
+Con esta función, obtiene el objeto `User` completo desde la base de datos, que es el usuario actual que esté logueado y lo asigna a `current_user`.
+Así podemos acceder a los elementos del usuario con `current_user.username` para el nombre de usuario, `current_user.role` para el rol... etc.
 
 3. **Agregar la gestión de sesiones con Flask-Login**
 Para manejar el inicio de sesión y la autenticación de un usuario, debes modificar la ruta de login en `routes.py` para hacer uso de las funcionalidades de Flask-Login.
@@ -738,10 +748,14 @@ Para ello:
 
 4. Creamos una nueva contraseña de aplicación y la copiamos
 
-5. Ahora, tenemos que modificar los archivos de nuestra aplicación para implementar Flask-Mail:
+5. Ahora, tenemos que modificar los archivos de nuestra aplicación para implementar Flask-Mail e importar el archivo de configuración:
 `app.py`
 ```python
 from flask_mail import Mail
+from config import Config
+
+app = Flask(__name__)
+app.config.from_object(Config)
 
 mail = Mail(app)
 ```
@@ -778,7 +792,15 @@ MAIL_DEFAULT_SENDER=[tuCorreo]@gmail.com
 ```
 
 Y listo, ya estará configurado para usarse.
+Para cambiar el nombre del remitente y ponerle mayúsculas por ejemplo, lo hacemos así:
+`MAIL_DEFAULT_SENDER="LanzAudit [tuCorreo]@gmail.com"`
 
 ---
+## Recuperación de contraseñas
+Los usuarios que pierdan su contraseña, entrarán en "Recuperar mi contraseña" en la pantalla de login.
+Rellenarán el formulario con su correo, el motivo del por qué necesitan recuperar la contraseña y algún mensaje adicional.
 
+La solicitud le llegará por correo a todos los usuarios cuyo rol sea "Admin", quienes entrarán en la pestaña de "Gestión de usuarios" y verán en naranja que se ha solicitado una recuperación de contraseña, le darán al botón naranja que aparecerá en la derecha y restablecerán la contraseña del usuario, comunicándoselo al mismo para que pueda acceder a la plataforma de nuevo.
+
+Como medida de seguridad, se usará [PassGen](https://github.com/Xerezanoo/PassGen) para crear contraseñas seguras.
 

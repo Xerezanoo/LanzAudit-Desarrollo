@@ -80,7 +80,10 @@
               <!-- /.col -->
               <div class="col-12">
                 <div class="d-grid gap-2">
-                  <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                  <button type="submit" class="btn btn-primary" id="submit-btn">
+                    Iniciar sesión
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
+                  </button>
                 </div>
               </div>
               <!-- /.col -->
@@ -137,7 +140,7 @@
     </script>
     <!--end::OverlayScrollbars Configure-->
     <!--end::Script-->
-    <!-- begin::Script Validación -->
+    <!-- begin::Script Validación y Spinner botón -->
     <script>
       (() => {
         'use strict';
@@ -149,6 +152,11 @@
               if (!form.checkValidity()) {
                 event.preventDefault();
                 event.stopPropagation();
+              } else {
+                const submitButton = document.getElementById('submit-btn');
+                const spinner = document.getElementById('spinner');
+                submitButton.disabled = true;
+                spinner.classList.remove('d-none');
               }
               form.classList.add('was-validated');
             },
@@ -157,6 +165,6 @@
         });
       })();
     </script>
-    <!-- end::Script Validación -->
+    <!-- end::Script Validación y Spinner botón -->
   </body>
 </html>
