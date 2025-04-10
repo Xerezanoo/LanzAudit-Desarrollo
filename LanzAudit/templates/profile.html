@@ -55,20 +55,20 @@
                 <canvas id="croppedCanvas" style="display: none;"></canvas>
                 <input type="hidden" name="cropped_image" id="croppedImageData">
               </div>
-              {% if current_user.profile_picture != 'default.png' %}
-              <div class="text-center mt-3">
-                <form action="{{ url_for('removeProfilePicture') }}" method="POST">
-                  <button type="submit" class="btn btn-danger">Eliminar foto de perfil</button>
-                </form>
-              </div>
-              {% endif %}
               <div class="d-grid gap-2 mt-3">
-              <button type="submit" class="btn btn-primary" id="submit-btn">
-                Guardar cambios
-                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
-              </button>
-            </div>
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                  Guardar cambios
+                  <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
+                </button>
+              </div>
             </form>
+            <div class="mt-3">
+            {% if current_user.profile_picture != None %}
+            <form action="{{ url_for('removeProfilePicture') }}" method="POST" class="text-center mb-3">
+              <button type="submit" class="btn btn-danger">Eliminar foto de perfil</button>
+            </form>
+            {% endif %}
+            </div>
           </div>
         </div>
       </div>
@@ -129,12 +129,12 @@
         viewMode: 1,
         dragMode: 'move',
         autoCropArea: 1,
-        minCropBoxWidth: 160,
-        minCropBoxHeight: 160,
+        minCropBoxWidth: 128,
+        minCropBoxHeight: 128,
         ready() {
           document.querySelector('form').addEventListener('submit', function () {
             if (cropper) {
-              const canvas = cropper.getCroppedCanvas({ width: 160, height: 160 });
+              const canvas = cropper.getCroppedCanvas({ width: 128, height: 128 });
               croppedImageData.value = canvas.toDataURL('image/png');
             }
           });

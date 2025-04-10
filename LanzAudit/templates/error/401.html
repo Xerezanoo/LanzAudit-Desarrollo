@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>403 - Acceso denegado</title>
+    <title>401 - No autorizado</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -11,11 +11,11 @@
         <section class="content">
             <div class="container-fluid">
                 <div class="error-page">
-                    <h2 class="headline text-danger"> 403</h2>
+                    <h2 class="headline text-danger"> 401</h2>
                     <div class="error-content">
-                        <h3><i class="fas fa-warning text-danger"></i> ¡Acceso denegado!</h3>
-                        <p>No tienes permiso para acceder a esta página.</p>
-                        <a href="{{ url_for('home') }}" class="btn btn-primary">Volver al inicio</a>
+                        <h3><i class="fas fa-lock text-danger"></i> ¡No tienes acceso a esta página!</h3>
+                        <p>Necesitas estar autenticado para acceder a este recurso.</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary">Iniciar sesión</a>
                     </div>
                 </div>
             </div>

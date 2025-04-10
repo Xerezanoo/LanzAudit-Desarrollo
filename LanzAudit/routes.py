@@ -4,7 +4,6 @@
 import os
 from flask import render_template, redirect, url_for, flash, request, abort
 from werkzeug.security import generate_password_hash,check_password_hash
-from werkzeug.utils import secure_filename
 from flask_login import login_user, login_required, logout_user, current_user
 from models import db, User
 from app import app, mail
@@ -14,15 +13,46 @@ from PIL import Image
 from io import BytesIO
 import base64
 
+# Rutas para el manejo de errores
+# Error 400 - Solicitud incorrecta
+@app.errorhandler(400)
+def badRequest(error):
+    return render_template('error/400.html'), 400
+
+# Error 401 - No autorizado
+@app.errorhandler(401)
+def unauthorized(error):
+    return render_template('error/401.html'), 401
+
+# Error 403 - Aceso denegado
+@app.errorhandler(403)
+def forbidden(error):
+    return render_template('error/403.html'), 403
+
 # Error 404 - Página no encontrada
 @app.errorhandler(404)
 def pageNotFound(error):
     return render_template('error/404.html'), 404
 
-# Error 403 - Acceso denegado
-@app.errorhandler(403)
-def forbidden(error):
-    return render_template('error/403.html'), 403
+# Error 405 - Método no permitido
+@app.errorhandler(405)
+def methodNotAllowed(error):
+    return render_template('error/405.html'), 405
+
+# Error 500 - Error interno del servidor
+@app.errorhandler(500)
+def internalServerError(error):
+    return render_template('error/500.html'), 500
+
+# Error 502 - Gateway incorrecto
+@app.errorhandler(502)
+def badGateway(error):
+    return render_template('error/502.html'), 502
+
+# Error 503 - Servicio no disponible
+@app.errorhandler(503)
+def serviceUnavailable(error):
+    return render_template('error/503.html'), 503
 
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
 @app.route('/', methods=['GET', 'POST'])
@@ -315,8 +345,8 @@ def profile():
         flash('Perfil actualizado correctamente', 'success')
         return redirect(url_for('profile'))
 
-    if current_user.profile_picture:
-        image_url = url_for('static', filename='profile_pics/' + current_user.profile_picture)
+    if user.profile_picture:
+        image_url = url_for('static', filename='profile_pics/' + user.profile_picture)
     else:
         image_url = url_for('static', filename='profile_pics/default.png')
 
@@ -326,15 +356,18 @@ def profile():
 @app.route('/remove-profile-picture', methods=['POST'])
 @login_required
 def removeProfilePicture():
-    if current_user.profile_picture and current_user.profile_picture != 'default.png':
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], current_user.profile_picture)
+    user = current_user
+    
+    if user.profile_picture is not None:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], user.profile_picture)
         if os.path.exists(file_path):
             os.remove(file_path)
-        current_user.profile_picture = None
+        
+        user.profile_picture = None
         db.session.commit()
         flash('Foto de perfil eliminada correctamente', 'success')
     else:
-        flash('No tienes una foto de perfil para eliminar', 'warning')
+        flash('No tienes una foto de perfil personalizada', 'info')
 
     return redirect(url_for('profile'))
 

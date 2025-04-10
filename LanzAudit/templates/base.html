@@ -75,7 +75,6 @@
                 <span class="d-none d-md-inline">{{ current_user.username }}</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                <!-- Header -->
                 <li class="user-header text-bg-primary">
                   <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_picture or 'default.png')) }}" class="rounded-circle shadow" alt="User Image" />
                   <p>
@@ -84,7 +83,7 @@
                     <small>Miembro desde {{ current_user.created_at.strftime('%B de %Y') | replace('January','enero') | replace('February','febrero') | replace('March','marzo') | replace('April','abril') | replace('May','mayo') | replace('June','junio') | replace('July','julio') | replace('August','agosto') | replace('September','septiembre') | replace('October','octubre') | replace('November','noviembre') | replace('December','diciembre') }}</small>
                   </p>
                 </li>
-                <!-- Footer -->
+                <!-- Footer del perfil -->
                 <li class="user-footer">
                   <a href="{{ url_for('profile') }}" class="btn btn-default btn-flat">Perfil</a>
                   <a href="{{ url_for('logout') }}" class="btn btn-default btn-flat float-end">Cerrar sesión</a>

@@ -2,82 +2,6 @@
 Flask --> ¿Por qué Flask en vez de Django?
 
 
-### Proyecto vulnmanager GitHub
-1. Para poder usar el script `genSec.sh`, tenemos que instalar el paquete `pwgen`:
-```bash
-sudo apt install pwgen -y
-```
-
-2. Tenemos que eliminar las siguientes líneas del archivo `docker-compose.yml`:
-```bash
-build: .
-
-build: ./GUI
-```
-
-3. El archivo `Dockerfile` será:
-```bash
-# Stage 1: Builder
-FROM ubuntu:20.04 as builder
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y \
-    maven openjdk-8-jdk pwgen git && \
-    mkdir -p /local/git
-
-RUN ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-    dpkg-reconfigure -f noninteractive tzdata
-
-WORKDIR /local/git/
-RUN git clone -b develop https://github.com/xebia-research/vulnmanager && \
-    cd vulnmanager && \
-    git pull && \
-    bash ./scripts/genSec.sh && \
-    bash ./dockerScripts/dbDefinition.sh && \
-    mvn install -DskipTests=true && \
-    mvn package -DskipTests=true
-
-# Stage 2: Runner
-FROM openjdk:8-jdk as runner
-RUN mkdir -p /opt/
-COPY --from=builder /local/git/vulnmanager/target/vulnmanager-1.0-SNAPSHOT.jar /opt/vulnmanager-1.0-SNAPSHOT.jar
-COPY --from=builder /local/git/vulnmanager/example_logs /opt/example_logs
-ENTRYPOINT ["java", "-jar", "/opt/vulnmanager-1.0-SNAPSHOT.jar"]
-```
-
-4. En el archivo `pom.xml`, haremos varias modificaciones:
-5. Primero, añadiremos las siguientes dependencias debajo de las existentes en `<dependencies>`:
-```java
-<dependency>
-     <groupId>javax.xml.bind</groupId>
-     <artifactId>jaxb-api</artifactId>
-     <version>2.3.1</version>
-</dependency>
-<dependency>
-     <groupId>com.sun.xml.bind</groupId>
-     <artifactId>jaxb-impl</artifactId>
-     <version>2.3.1</version>
-</dependency>
-<dependency>
-     <groupId>javax.activation</groupId>
-     <artifactId>activation</artifactId>
-     <version>1.1.1</version>
-</dependency>
-<dependency>
-     <groupId>org.glassfish.jaxb</groupId>
-     <artifactId>jaxb-runtime</artifactId>
-     <version>2.3.1</version>
-</dependency>
-```
-6. Luego eliminamos las dependencias duplicadas:
-- `spring-boot-starter-data-jpa`
-- `jjwt`
-7. Y por último, ejecutamos el siguiente comando para compilar el proyecto (tenemos que tener instalado el paquete `maven` en nuestra máquina principal):
-```bash
-mvn clean install -DskipTests=true
-```
-Se ha compilado correctamente, pero aun así siguen habiendo problemas al hacerle el `sudo docker compose build`.
-
 ## Plantilla Dashboard Flask (Flask-adminator)
 He encontrado un proyecto en GitHub con una plantilla de Panel muy parecida a lo que necesito:
 https://github.com/app-generator/flask-adminator/tree/master
@@ -93,7 +17,7 @@ Como estoy en una distribución basada en Debian, lo instalo con `sudo apt insta
 7. Montamos la base de datos y exportamos las variables de entorno de la base de datos (ver más abajo)
 8. Iniciamos la app en `http://127.0.0.1:5000/` con `flask run` (siempre con el entorno virtual activado, porque si no no tendremos las dependencias necesarias para iniciarla)
 ### Modificaciones
-#### Archivo `gunicorn-cfg.py` **temporal
+#### Archivo `gunicorn-cfg.py` temporal
 Cambiamos el bind a `0.0.0.0:8080`, que es el puerto donde vamos a levantar la app en DigitalOcean
 #### Migrar base de datos SQLite a MariaDB
 1. Instalamos y habilitamos MariaDB:
@@ -245,7 +169,7 @@ En `/apps/templates/includes/sidebar.html`, cambiar el logo por el mío y el nom
 ---
 ## LanzAudit
 ### Modo Local
-1. Clonamos el repositorio que contiene la aplicación
+1. Clonamos el repositorio de la aplicación
 2. Creamos un entorno virtual
 ```bash
 python3 -m venv .venv
@@ -258,8 +182,36 @@ source .venv/bin/activate
 ```bash
 pip3 install -r requirements.txt
 ```
-5. Ya podemos desarrollar o usar la aplicación
-6. La levantamos por el puerto 5000 con:
+5. Creamos la base de datos `LanzAuditDB` y el usuario `LanzAdmin`. Si lo hacemos en MariaDB o MySQL es:
+```mysql
+CREATE DATABASE LanzAuditDB;
+```
+```mysql
+CREATE USER 'LanzAdmin'@'localhost' IDENTIFIED BY 'admingarcialanza';
+GRANT ALL PRIVILEGES ON LanzAuditDB.* TO 'LanzAdmin'@'localhost';
+FLUSH PRIVILEGES;
+```
+6. Creamos un archivo `.env` para rellenarlo con nuestra información. Por ejemplo:
+```
+SECRET_KEY=69K@i2WlPyy&
+DATABASE_URI=mysql+pymysql://LanzAdmin:admingarcialanza@localhost/LanzAuditDB
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=lanzaudit@gmail.com
+MAIL_PASSWORD=xhgtcclowergfbel
+MAIL_DEFAULT_SENDER="LanzAudit lanzaudit@gmail.com"
+```
+7. Inicializamos la base de datos y creamos sus tablas con Flask-Migrate:
+```bash
+flask db init
+```
+```bash
+flask db migrate -m "Inicializando la base de datos"
+```
+```bash
+flask db upgrade
+```
+8. La levantamos por el puerto 5000 con:
 ```bash
 flask run
 ```
@@ -271,12 +223,13 @@ flask run
 He encontrado esta plantilla de Panel de Administración Open Source: [AdminLTE](https://adminlte.io/)
 
 ---
-## Plantillas HTML usadas
+## Plantillas HTML usadas (`templates/`)
 ### `base.html`
 He tomado como base el `index.html` de AdminLTE para coger la sidebar y la cabecera y heredarla en todas las plantillas con Jinja2. Esto me ha simplificado muchísimo el trabajo, ya que si quisiera cambiar 1 elemento de la sidebar por ejemplo, tendría que cambiarlo manualmente en todas las plantillas que tuvieran sidebar, pero con la herencia se cambiará en todas automáticamente.
 Además me ayuda a tenerlo todo más ordenado y organizado y a que tengan el mismo estilo sin variaciones.
 
 ### `index.html`
+Es el Dashboard, el panel de administración principal. Es el inicio, el home.
 1. En `<head>`:
     - Título.
     - Metadatos.
@@ -285,9 +238,12 @@ Además me ayuda a tenerlo todo más ordenado y organizado y a que tengan el mis
     - Barra de navegación con una herramienta para poner el panel en pantalla completa y con tu perfil de usuario para cerrar sesión o modificar los datos.
     - Sidebar con los enlaces al Inicio, la herramienta para Realizar los escaneos, la página para ver las Estadísticas y los resultados de las auditorías, una página que solo será mostrada al administrador para la gestión de usuarios y las páginas de preguntas frecuentes y la licencia
     - En el panel principal se verán algunas estadísticas principales como los 2 o 3 últimos escaneos, un gráfico con el número de escaneos por tipo y algunas estadísticas más.
-    
+
+### `profile.html`
+Es un pequeño formulario para que los usuarios puedan cambiar o actualizar su nombre de usuario, su correo electrónico o su foto de perfil (además de poder eliminarla y volver a usar la predeterminada).
 
 ### `login.html`
+Es la pantalla para iniciar sesión. Es lo primero que sale cuando entras a la aplicación. Si no existe LanzAdmin, te redirigirá a `setup-admin.html` para realizar la configuración inicial de este. También tendrá un enlace a la página de recuperación de contraseña por si el usuario la ha perdido, se la han robado o ha ocurrido cualquier cosa.
 1. En `<head>`:
     - Rutas de los estilos a mi carpeta `static/css`.
 
@@ -301,8 +257,11 @@ Además me ayuda a tenerlo todo más ordenado y organizado y a que tengan el mis
     - Dejamos abajo un solo enlace de "He olvidado mi contraseña" que te redirige a un formulario para realizar una solicitud de restablecimiento de contraseña al administrador.
     - He añadido al final un script de validación que viene en uno de los formularios de ejemplos de AdminLTE, en `dist/pages/forms/general.html`. 
 
-### `forgot-password.html`
-Es casi igual que la de login, pero tiene explicado que la página es para enviarle una solicitud al administrador para recuperar tu contraseña.
+### `setup-admin.html`
+Es casi igual que el login, pero esta es para configurar el usuario LanzAdmin, el usuario Administrador principal de la plataforma. Solo se podrá acceder y configurarlo 1 vez, mientras que no exista ningún LanzAdmin en la base de datos. Una vez que se cree, se podrá cambiar su correo y su contraseña, pero no el nombre de usuario ni el rol.
+
+### `password-recovery.html`
+Es casi igual que el login, pero esta es para enviarle una solicitud al administrador para recuperar tu contraseña.
 Tiene 3 campos para introducir información que le llegará al administrador para que este se ponga en contacto con el usuario para restablecer su contraseña:
 - Correo electrónico del usuario
 - Motivo de la solicitud
@@ -315,10 +274,15 @@ Una tarjeta informando sobre la licencia que uso en mi aplicación con un enlace
 ### `faq.html`
 Otra tarjeta del mismo estilo que la de la licencia con las preguntas más frecuentes sobre el uso de mi aplicación.
 
-### manage-users.html
-Una lista con los usuarios que hay guardados en la base de datos y su información. Además, algunos botones para modificarlos, eliminarlos o crear nuevos. A esta página solo tendrán acceso los usuarios con el rol 'admin'.
+### `admin/manage-users.html`
+Una tabla con una lista con los usuarios que hay guardados en la base de datos y su información. Además, algunos botones para modificarlos, eliminarlos o crear nuevos. A esta página solo tendrán acceso los usuarios con el rol 'Admin'.
+### `admin/add-user.html`
+Formulario para añadir nuevos usuarios a la plataforma.
+### `admin/edit-user.html`
+Formulario para editar al usuario en el que pinchemos (en el icono del lápiz).
+### `admin/resolve-reset-request.html`
+Formulario para ponerle una contraseña nueva al usuario que solicite la recuperación de la misma y así confirmar que se ha completado la solicitud (cuando pinchemos al icono de la llave que sale en naranja cuando un usuario solicita una recuperacion).
 
-###
 
 ---
 ## Base de datos
@@ -358,12 +322,12 @@ Atributos:
 ### Modelo Entidad - Relación
 Ahora una vez que sé lo que necesito, voy a hacer el modelo ER para ver qué relación tienen mis tablas:
 
-![Diagrama ER]("Diagrama ER LanzAuditDB.png")
+![Diagrama ER](db/diseñoLogicoDB/DiagramaERLanzAuditDB.png)
 
 ### Diccionario de Datos y Modelo Lógico o Relacional
 Una vez hecho esto, también he hecho el Diccionario de Datos y el Modelo Lógico.
 
-### Conexión de la base de datos con Flask (`en app.py`)
+### Probar la conexión de la base de datos con Flask (`en app.py`)
 1. Instalamos las dependencias necesarias
 ```bash
 pip3 install Flask-SQLAlchemy
@@ -397,52 +361,63 @@ def test_db():
 
 4. Vamos a `http://localhost:5000/test_db` y comprobamos que se ha hecho una conexión exitosa a la base de datos.
 
-### Conexión y configuración de la base de datos con la nueva estructura de proyecto
+### Conexión y configuración de la base de datos con la nueva estructura de proyecto (`models.py`)
 Usaremos el archivo `models.py` para definir todo lo relacionado con la base de datos:
 ```python
+# models.py
+
+# Importación de las librerías necesarias
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
-db = SQLAlchemy()
+# Inicialización de SQLAlchemy
+db = SQLAlchemy() # Objeto que interactúa con la BD
 
+# Modelo de la tabla 'user' (Usuarios)
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), nullable=False, unique=True)
-    email = db.Column(db.String(255), nullable=False, unique=True)
-    password_hash = db.Column(db.String(255), nullable=False)
-    profile_picture = db.Column(db.String(255), nullable=True)
-    role = db.Column(db.Enum('Admin', 'Worker', 'Analyst', name='user_roles'), nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+	id = db.Column(db.Integer, primary_key=True)
+	username = db.Column(db.String(150), nullable=False, unique=True)
+	email = db.Column(db.String(255), nullable=False, unique=True)
+	password_hash = db.Column(db.String(255), nullable=False)
+	profile_picture = db.Column(db.String(255), nullable=True)
+	role = db.Column(db.Enum('Admin', 'Worker', 'Analyst', name='user_roles'), nullable=False)
+	password_reset_requested = db.Column(db.Boolean, default=False)
+	password_reset_requested_at = db.Column(db.DateTime, default=None)
+	created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    def __repr__(self):
-        return f'<User {self.username}>'
+def __repr__(self):
+	return f'<Usuario {self.username}>' # Usuario LanzAdmin
 
+
+# Modelo de la tabla 'scan' (Escaneos)
 class Scan(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    scan_type = db.Column(db.Enum('Puertos', 'WordPress', name='scan_type_enum'), nullable=False)
-    scan_parameters = db.Column(db.JSON, nullable=True)
-    status = db.Column(db.Enum('Pendiente', 'En Progreso', 'Completado', 'Fallido', name='status_enum'), default='Pendiente')
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+	id = db.Column(db.Integer, primary_key=True)
+	user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+	scan_type = db.Column(db.Enum('Puertos', 'WordPress', name='scan_type_enum'), nullable=False)
+	scan_parameters = db.Column(db.JSON, nullable=True)
+	status = db.Column(db.Enum('Pendiente', 'En Progreso', 'Completado', 'Fallido', name='status_enum'), default='Pendiente')
+	created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    user = db.relationship('User', backref=db.backref('scans', lazy=True))
+# Relación con el modelo 'User' (un usuario puede tener muchos escaneos)
+user = db.relationship('User', backref=db.backref('scans', lazy=True))
+ 
+def __repr__(self):
+	return f'<Escaneo {self.id} - {self.scan_type}>' # Escaneo 1 - Puertos
 
-    def __repr__(self):
-        return f'<Scan {self.id} - {self.scan_type}>'
 
+# Modelo de la tabla 'scan_results' (Resultado de los escanaeos)
 class ScanResult(db.Model):
-    __tablename__ = 'scan_results'
+	__tablename__ = 'scan_results'
+	id = db.Column(db.Integer, primary_key=True)
+	scan_id = db.Column(db.Integer, db.ForeignKey('scan.id'), nullable=False)
+	result = db.Column(db.JSON, default=None)
+	created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    id = db.Column(db.Integer, primary_key=True)
-    scan_id = db.Column(db.Integer, db.ForeignKey('scan.id'), nullable=False)
-    result = db.Column(db.JSON, default=None)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+# Relación con el modelo 'Scan' (un escaneo puede tener muchos resultados)
+scan = db.relationship('Scan', backref=db.backref('scan_results', lazy=True))
 
-    scan = db.relationship('Scan', backref=db.backref('scan_results', lazy=True))
-
-    def __repr__(self):
-        return f'<ScanResult {self.id}>'
-
+def __repr__(self):
+	return f'<Resultado {self.id} - Escaneo {self.scan_id}>' # Resultado 1 - Escaneo 1
 ```
 
 Y ahora usamos Flask-Migrate para hacer la migración de la base de datos y poder hacer cambios en ella a traves de SQLAlchemy y pymysql:
@@ -485,7 +460,7 @@ Para configurar mi proyecto con variables de entorno en un archivo `.env`:
 ```bash
 pip3 install python-dotenv
 ```
-2. **Creamos el archivo .env en la raíz del proyecto y le añadimos los datos sensibles**
+2. **Creamos el archivo .env en la raíz del proyecto y le añadimos los datos sensibles** (voy a poner el ejemplo de 2, pero al final serán muchos más)
 ```bash
 nano .env
 ```
@@ -569,9 +544,10 @@ Al usuario LanzAdmin no se le podrá eliminar y tampoco cambiar el nombre de usu
 
 También incluye un botón para añadir un nuevo usuario a la plataforma.
 
-Todos los formularios (de edición y de creación) tienen validación para que se introduzcan todos los campos correctamente y no hayan problemas al enviar la solicitud.
+Todos los formularios (de edición y de creación) tienen validación para que se introduzcan todos los campos correctamente y no hayan problemas al enviar la solicitud. También está todo controlado y verificado para que no se introduzcan datos repetidos como correos que ya están registrados o nombres de usuario que ya estén en uso.
 
 También he modificado el archivo `base.html` para que en la sidebar solo aparezca esta página a los usuarios con el rol 'Admin'.
+
 ---
 ## Flask-Login
 Vamos a usar Flask-Login para los manejos de sesión en mi aplicación.
@@ -590,11 +566,11 @@ from flask_login import LoginManager
 
 # Inicialización de Flask-Login
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'  # Aquí defines la vista de login que se redirigirá si no hay sesión activa
+login_manager.login_view = 'login'  # Aquí defines la vista de login, que es a la que se redirigirá si no hay sesión activa
 
 # Cargar el usuario
 @login_manager.user_loader
-def load_user(user_id):
+def loadUser(user_id):
     return User.query.get(int(user_id))
 ```
 --> En este caso, `login_manager.user_loader` es una función que Flask-Login usará para cargar un usuario basándose en el `user_id`. Este `user_id` se almacena en la sesión, por lo que Flask-Login puede recuperar al usuario autenticado en cada solicitud (con `current_user`).
@@ -611,7 +587,7 @@ Así podemos acceder a los elementos del usuario con `current_user.username` par
 
 3. **Agregar la gestión de sesiones con Flask-Login**
 Para manejar el inicio de sesión y la autenticación de un usuario, debes modificar la ruta de login en `routes.py` para hacer uso de las funcionalidades de Flask-Login.
-Modifica la ruta de login en `routes.py` de la siguiente manera:
+Estos son algunos ejemplos de algunas rutas que usan Flask-Login:
 ```python
 from flask import render_template, redirect, url_for, flash, request
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -622,52 +598,20 @@ from app import app  # Asegúrate de importar la app desde app.py
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
 @app.route('/', methods=['GET', 'POST'])
 def login():
-    if not User.query.filter_by(username="LanzAdmin").first():
-        return redirect(url_for('setupAdmin'))
-    else:
-        if request.method == 'POST':
-            email = request.form['email']
-            password = request.form['password']
+	if not User.query.filter_by(username="LanzAdmin").first():
+		return redirect(url_for('setupAdmin'))
+	else:
+		if request.method == 'POST':
+		email = request.form['email']
+		password = request.form['password']
 
-            user = User.query.filter_by(email=email).first()
-            if user and check_password_hash(user.password_hash, password):
-                login_user(user)
-                return redirect(url_for('home'))
-            else:
-                flash('Correo electrónico o contraseña incorrectos', 'danger')
-    return render_template('login.html')
-
-# Ruta para la configuración inicial del usuario LanzAdmin y la creación del mismo
-@app.route('/setup-admin', methods=['GET', 'POST'])
-def setupAdmin():
-    adminExists = User.query.filter_by(username="LanzAdmin").first()
-    if adminExists:
-        flash('El usuario Administrador LanzAdmin ya está creado', 'warning')
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        username = 'LanzAdmin'
-
-        if User.query.filter_by(email=email).first():
-            flash('El correo electrónico introducido ya está registrado. Usa otro diferente', 'danger')
-            return redirect(url_for('setupAdmin'))
-
-        lanzAdmin = User(
-            username=username,
-            email=email,
-            password_hash=generate_password_hash(password),
-            role='Admin'
-        )
-
-        db.session.add(lanzAdmin)
-        db.session.commit()
-
-        flash('Usuario LanzAdmin creado con éxito. Ahora puedes iniciar sesión', 'success')
-        return redirect(url_for('login'))
-
-    return render_template("setup-admin.html")
+		user = User.query.filter_by(email=email).first()
+		if user and check_password_hash(user.password_hash, password):
+			login_user(user)
+			return redirect(url_for('home'))
+		else:
+		flash('Correo electrónico o contraseña incorrectos', 'danger')
+		return render_template('login.html')
 
 # Ruta para la vista de dashboard (solo accesible si el usuario está autenticado)
 @app.route('/dashboard')
@@ -685,7 +629,7 @@ def logout():
 ```
 
 4. **Plantilla login.html**
-En tu plantilla de login (`login.html`), ya estás pidiendo un correo y una contraseña. Asegúrate de que el formulario esté configurado para enviar la información correctamente a la ruta de login (`action="{{ url_for('login') }}"`).
+En la plantilla de login (`login.html`), ya estamos pidiendo un correo y una contraseña. Solo tenemos que asegurarnos de que el formulario esté configurado para enviar la información correctamente a la ruta de login (`action="{{ url_for('login') }}"`).
 
 5. **Control de acceso con @login_required**
 En las vistas donde deseas restringir el acceso a usuarios autenticados, usa el decorador `@login_required`. Como se ve en la ruta `/dashboard`, el acceso está restringido a usuarios que hayan iniciado sesión:
@@ -696,7 +640,7 @@ def dashboard():
 ```
 
 6. **Manejo de la sesión**
-Cuando el usuario inicia sesión correctamente, Flask-Login se encarga de gestionar la sesión del usuario. Puedes acceder al usuario actual a través de current_user en cualquier parte de tu aplicación:
+Cuando el usuario inicia sesión correctamente, Flask-Login se encarga de gestionar la sesión del usuario. Podemos acceder al usuario actual a través de `current_user` en cualquier parte de tu aplicación:
 ```python
 from flask_login import current_user
 
@@ -715,39 +659,34 @@ Resumen de los cambios importantes:
 
 `logout_user`: Cierra la sesión del usuario.
 
-
 ---
 ## Mensajes Flash
 Usaremos este bloque justo antes de la etiqueta `<form>` de los formularios para poder mostrar en el frontend los mensajes de error que envía el backend:
 ```html
-          <!--begin::Mensajes Flash-->
-          {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div class="alert-container">
-              {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                  {{ message }}
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
-          <!--end::Mensajes Flash-->
+<!--begin::Mensajes Flash-->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="alert-container">
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+<!--end::Mensajes Flash-->
 ```
 
 ---
 ## Flask-Mail
 Vamos a configurar Flask-Mail para poder enviar un correo a los usuarios administradores cuando un usuario de la plataforma solicite una recuperación de su contraseña.
-Para ello:
-1. Nos creamos una cuenta de correo desde la que vamos a mandar los correos. En mi caso, la he creado con Google y la he llamado `lanzaudit@gmail.com`
-
+Para ello, si lo hacemos con Google:
+1. Nos creamos una cuenta de correo desde la que vamos a mandar los correos. La he llamado `lanzaudit@gmail.com`
 2. Ahora vamos a activar la verificación en 2 pasos
-
 3. Una vez activada, vamos a "Contraseñas de aplicación", en Seguridad de nuestra cuenta Google
-
 4. Creamos una nueva contraseña de aplicación y la copiamos
-
 5. Ahora, tenemos que modificar los archivos de nuestra aplicación para implementar Flask-Mail e importar el archivo de configuración:
 `app.py`
 ```python
@@ -800,7 +739,237 @@ Para cambiar el nombre del remitente y ponerle mayúsculas por ejemplo, lo hacem
 Los usuarios que pierdan su contraseña, entrarán en "Recuperar mi contraseña" en la pantalla de login.
 Rellenarán el formulario con su correo, el motivo del por qué necesitan recuperar la contraseña y algún mensaje adicional.
 
-La solicitud le llegará por correo a todos los usuarios cuyo rol sea "Admin", quienes entrarán en la pestaña de "Gestión de usuarios" y verán en naranja que se ha solicitado una recuperación de contraseña, le darán al botón naranja que aparecerá en la derecha y restablecerán la contraseña del usuario, comunicándoselo al mismo para que pueda acceder a la plataforma de nuevo.
+La solicitud le llegará por correo a todos los usuarios cuyo rol sea "Admin", quienes entrarán en la pestaña de "Gestión de usuarios" y verán en naranja que se ha solicitado una recuperación de contraseña, le darán al botón naranja con el icono de la llave que aparecerá en la derecha y restablecerán la contraseña del usuario, comunicándoselo al mismo para que pueda acceder a la plataforma de nuevo.
 
 Como medida de seguridad, se usará [PassGen](https://github.com/Xerezanoo/PassGen) para crear contraseñas seguras.
 
+---
+## Perfil
+Los usuarios podrán pinchar arriba a la derecha en su perfil y entrar a un formulario donde podrán cambiarse el nombre de usuario, el correo y la foto de perfil.
+La ruta en `routes.py` se ha quedado así:
+```python
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+	user = current_user
+	
+	if request.method == 'POST':
+		new_username = request.form.get('username')
+		new_email = request.form.get('email')
+		cropped_data = request.form.get('cropped_image')
+	
+		if new_email != user.email and new_username != user.username:
+			existing_email = User.query.filter_by(email=new_email).first()
+			existing_user = User.query.filter_by(username=new_username).first()
+			if existing_email and existing_user:
+				flash('El correo electrónico y el nombre de usuario ya están registrados', 'danger')
+				return redirect(url_for('profile'))
+
+		if new_email != user.email:
+			existing_email = User.query.filter_by(email=new_email).first()
+			if existing_email:
+				flash('El correo electrónico ya está registrado', 'danger')
+				return redirect(url_for('profile'))
+			user.email = new_email
+
+		if user.username != 'LanzAdmin' and new_username != user.username:
+			existing_user = User.query.filter_by(username=new_username).first()
+			if existing_user:
+				flash('El nombre de usuario ya está en uso', 'danger')
+				return redirect(url_for('profile'))
+			user.username = new_username
+
+		if cropped_data:
+			try:
+				header, encoded = cropped_data.split(",", 1)
+				image_data = base64.b64decode(encoded)
+				image = Image.open(BytesIO(image_data))
+	
+				filename = f"user_{user.id}.png"
+				image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+				image.save(image_path)
+	
+				user.profile_picture = filename
+			except Exception as error:
+				flash('Error al procesar la imagen recortada', 'danger')
+				print(error)
+				return redirect(url_for('profile'))
+
+		db.session.commit()
+		flash('Perfil actualizado correctamente', 'success')
+		return redirect(url_for('profile'))
+
+	if user.profile_picture:
+		image_url = url_for('static', filename='profile_pics/' + user.profile_picture)
+	else:
+		image_url = url_for('static', filename='profile_pics/default.png')
+	
+	return render_template('profile.html', image_url=image_url)
+```
+
+### Explicación foto de perfil
+En el HTML, hemos creado un input para subir imágenes que está configurado así:
+```html
+<div class="form-group mt-3">
+	<label for="imageInput" class="mb-2 d-block">Foto de perfil</label>
+	<input type="file" class="form-control-file" id="imageInput" accept="image/*">
+	<div class="mt-3 text-center">
+		<img id="imagePreview" style="max-width: 100%; display: none;" />
+	</div>
+	<canvas id="croppedCanvas" style="display: none;"></canvas>
+	<input type="hidden" name="cropped_image" id="croppedImageData">
+</div>
+```
+
+Vamos a usar Cropper.js para recortar imágenes directamente desde el navegador. Así podemos:
+1. Permitir que el usuario suba su imagen
+2. Mostrar una previsualización de la misma
+3. Permitir al usuario mover y redimensionar el área de recorte, quedando siempre con las medidas que yo quiera (lo he configurado a 128x128, como las imágenes de ejemplo del panel Adminlte)
+4. Obtener la imagen recortada como el usuario ha querido y codificarla en base64 para tratarla como una cadena de texto
+
+Incluiremos este script al final del archivo HTML:
+```html
+<script>
+	let cropper;
+	const imageInput = document.getElementById('imageInput');
+	const imagePreview = document.getElementById('imagePreview');
+	const croppedImageData = document.getElementById('croppedImageData');
+
+	imageInput.addEventListener('change', (e) => {
+		const file = e.target.files[0];
+		if (!file) return;
+		
+		const reader = new FileReader();
+		reader.onload = function (event) {
+			imagePreview.src = event.target.result;
+			imagePreview.style.display = 'block';
+
+			if (cropper) cropper.destroy();
+
+			cropper = new Cropper(imagePreview, {
+				aspectRatio: 1,
+				viewMode: 1,
+				dragMode: 'move',
+				autoCropArea: 1,
+				minCropBoxWidth: 128,
+				minCropBoxHeight: 128,
+				ready() {
+					document.querySelector('form').addEventListener('submit', function () {
+						if (cropper) {
+							const canvas = cropper.getCroppedCanvas({ width: 128, height: 128 });
+							croppedImageData.value = canvas.toDataURL('image/png');
+						}
+					});
+				}
+			});
+		};
+		reader.readAsDataURL(file);
+	});
+</script>
+```
+
+En el backend, en la parte del perfil en `routes.py`, esta es la parte que trabaja con la imagen:
+```python
+from PIL import Image
+from io import BytesIO
+import base64
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+	user = current_user
+	
+	if request.method == 'POST':
+		cropped_data = request.form.get('cropped_image')
+	
+		if cropped_data:
+			try:
+				header, encoded = cropped_data.split(",", 1)
+				image_data = base64.b64decode(encoded)
+				image = Image.open(BytesIO(image_data))
+		
+				filename = f"user_{user.id}.png"
+				image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+				image.save(image_path)
+		
+				user.profile_picture = filename
+			except Exception as error:
+				flash('Error al procesar la imagen recortada', 'danger')
+				print(error)
+				return redirect(url_for('profile'))
+				
+		db.session.commit()
+		flash('Perfil actualizado correctamente', 'success')
+		return redirect(url_for('profile'))
+	
+	if user.profile_picture:
+		image_url = url_for('static', filename='profile_pics/' + user.profile_picture)
+	else:
+		image_url = url_for('static', filename='profile_pics/default.png')
+
+	return render_template('profile.html', image_url=image_url)
+```
+1. Si la solicitud es `POST`, recoge el `cropped_image`, que como vimos antes en el formulario HTML, es la imagen recortada que sube el usuario
+2. Si existe `cropped_data`:
+	1. Divide la cadena en base64 que ha recibido en 2 partes:
+		1. `header` --> Contiene el tipo MIME (el identificador del tipo de medio, que será `"data:image/png;base64"`)
+		2. `encoded` --> Es la imagen codificada en base64
+	2. Decodifica la imagen (`encoded`) en la variable `image_data`
+	3. Convierte `image_data` en bytes y se guarda en la variable `image`, por lo que `image` ya es la imagen tal cual, sin codificación en base64. Ya podemos guardarla o abrirla o lo que queramos.
+	4. Ahora crea un nombre genérico de fotos de perfil para todos los usuarios que estará compuesto por `user_` + `user.id` + `.png`. Así todas las fotos tendrán el mismo formato y serán reconocibles para gestionarlas y si un usuario cambia de foto de perfil, no se duplicará, sino que se sobrescribirá. La foto de perfil del usuario con el id=4 por ejemplo, tendrá el nombre de `user_4.png`.
+	5. En la variable `image_path` se guarda la ruta de la imagen, que estará compuesta por la ruta que hayamos configurado en nuestro `config.py` (yo he puesto `static/profile_pics)`) y el nombre del archivo (`user_1.png`, `user_2.png`...)
+	6. Ahora, guardamos la imagen en la ruta indicada con `image.save(image_path)`
+	7. Le asignamos al `current_user` (que estamos llamando como `user` porque al principio de la función definimos que `user = current_user`) la foto de perfil que ha subido para que se refleje en la base de datos.
+	8. Si hubiera algún error, saldría en pantalla y redirigiría al usuario al formulario del perfil de nuevo
+3. Una vez terminado, se aplicarían los cambios en la base de datos con `db.session.commit()` y saldría un mensaje de que todo ha salido correctamente.
+4. Por último, si el usuario tiene foto de perfil:
+	1. Decimos que `image_url` es `static/profile_pics/user.profile_picture`. Por ejemplo, para el usuario 8, `image_url` es `static/profile_pics/user_18.png`.
+5. Y si no tiene:
+	1. Decimos que `image_url` sea la predeterminada (`static/profile_pics/default.png`)
+6. Y renderizamos la plantilla HTML del perfil, pasándole la variable `image_url`, que la podrá usar dentro de la plantilla.
+
+---
+## Errores
+He creado varias páginas HTML con el mismo formato y estilos que las de AdminLTE (el estilo que llevo siguiendo todo el Proyecto) para el manejo de errores. Las he metido en la carpeta `templates/error/` y he hecho páginas para los errores más comunes de las páginas web.
+Luego, en `routes.py` he configurado las funciones con sus decoradores para cada error:
+```python
+# Rutas para el manejo de errores
+# Error 400 - Solicitud incorrecta
+@app.errorhandler(400)
+def badRequest(error):
+return render_template('error/400.html'), 400
+  
+# Error 401 - No autorizado
+@app.errorhandler(401)
+def unauthorized(error):
+return render_template('error/401.html'), 401
+
+# Error 403 - Aceso denegado
+@app.errorhandler(403)
+def forbidden(error):
+return render_template('error/403.html'), 403
+
+# Error 404 - Página no encontrada
+@app.errorhandler(404)
+def pageNotFound(error):
+return render_template('error/404.html'), 404
+
+# Error 405 - Método no permitido
+@app.errorhandler(405)
+def methodNotAllowed(error):
+return render_template('error/405.html'), 405
+
+# Error 500 - Error interno del servidor
+@app.errorhandler(500)
+def internalServerError(error):
+return render_template('error/500.html'), 500
+
+# Error 502 - Gateway incorrecto
+@app.errorhandler(502)
+def badGateway(error):
+return render_template('error/502.html'), 502
+
+# Error 503 - Servicio no disponible
+@app.errorhandler(503)
+def serviceUnavailable(error):
+return render_template('error/503.html'), 503
+```
