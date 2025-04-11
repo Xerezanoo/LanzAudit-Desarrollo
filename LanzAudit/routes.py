@@ -378,3 +378,34 @@ def logout():
     logout_user()
     flash('Se ha cerrado sesión correctamente', 'success')
     return redirect(url_for('login'))
+
+
+
+
+# Ruta para la página de selección de escaneo
+@app.route('/scan', methods=['GET'])
+def scan():
+    return render_template('scan/scan.html')
+
+# Ruta para redirigir a los formularios específicos
+@app.route('/scan_type', methods=['GET'])
+def scan_type():
+    scan_type = request.args.get('scan_type')
+    if scan_type == 'nmap':
+        return redirect(url_for('nmapScan'))
+    elif scan_type == 'wpscan':
+        return redirect(url_for('wpscanScan'))
+    else:
+        flash("Selección no válida", 'danger')
+        return redirect(url_for('scan'))
+
+# Ruta para la ejecución de los escaneos con Nmap
+@app.route('/scan/nmap', methods=['GET', 'POST'])
+def nmapScan():
+    return render_template('scan/nmap-scan.html')
+
+# Ruta para la ejecución de los escaneos con WPScan
+@app.route('/scan/wpscan', methods=['GET', 'POST'])
+def wpscanScan():
+    return render_template('scan/wpscan-scan.html')
+

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Tipos de Escaneo{% endblock %}
+{% block page_title %}Tipos de Escaneo{% endblock %}
+{% block page_title_2 %}Tipos de Escaneo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Selecciona el tipo de escaneo</h2>
+    <p class="text-center text-muted mb-5">Elige entre los tipos de análisis disponibles según el sistema o página web que quieras revisar.</p>
+    
+    <div class="row">
+        <!-- Nmap -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex align-items-center">
+                    <i class="bi bi-diagram-3-fill fs-4 text-primary me-2"></i>
+                    <h5 class="mb-0">Escaneo con Nmap</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <i class="bi bi-search me-1"></i> Analiza un servidor o equipo conectado a internet para descubrir qué servicios están activos y si hay puertos abiertos que puedan ser vulnerables.
+                    </p>
+                    <p class="text-muted"><em>Recomendado para escanear sistemas, servidores y dispositivos en red.</em></p>
+                    <a href="{{ url_for('nmapScan') }}" class="btn btn-primary">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Ir al escaneo con Nmap
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- WPScan -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex align-items-center">
+                    <i class="bi bi-wordpress fs-4 text-info me-2"></i>
+                    <h5 class="mb-0">Escaneo con WPScan</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <i class="bi bi-shield-lock-fill me-1"></i> Revisa sitios web hechos con WordPress para encontrar vulnerabilidades, plugins desactualizados o configuraciones inseguras.
+                    </p>
+                    <p class="text-muted"><em>Recomendado para analizar páginas web con WordPress.</em></p>
+                    <a href="{{ url_for('wpscanScan') }}" class="btn btn-primary">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Ir al escaneo con WPScan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

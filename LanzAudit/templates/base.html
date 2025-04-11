@@ -113,14 +113,14 @@
               </li>
               {% if current_user.role == 'Admin' or current_user.role == 'Worker' %}
               <li class="nav-item">
-                <a href="/escaneos" class="nav-link">
+                <a href="/scan" class="nav-link">
                   <i class="nav-icon bi bi-search"></i>
                   <p>Realizar Escaneos</p>
                 </a>
               </li>
               {% endif %}
               <li class="nav-item">
-                <a href="/estadisticas" class="nav-link">
+                <a href="/stats" class="nav-link">
                   <i class="nav-icon bi bi-bar-chart-fill"></i>
                   <p>Resultados y Estadísticas</p>
                 </a>
@@ -163,6 +163,9 @@
                             <li class="breadcrumb-item"><a href="/dashboard">Inicio</a></li>
                             {% if 'addUser' in request.endpoint or 'editUser' in request.endpoint %}
                             <li class="breadcrumb-item"><a href="{{ url_for('manageUsers') }}">Gestión de Usuarios</a></li>
+                            {% endif %}
+                            {% if 'nmapScan' in request.endpoint or 'wpscanScan' in request.endpoint %}
+                            <li class="breadcrumb-item"><a href="{{ url_for('scan') }}">Tipos de Escaneo</a></li>
                             {% endif %}
                             <li class="breadcrumb-item">{% block page_title_2 %}{% endblock %}</li>
                         </ol>
