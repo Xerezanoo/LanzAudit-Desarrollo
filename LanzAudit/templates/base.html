@@ -165,7 +165,7 @@
                             <li class="breadcrumb-item"><a href="{{ url_for('manageUsers') }}">Gestión de Usuarios</a></li>
                             {% endif %}
                             {% if 'nmapScan' in request.endpoint or 'wpscanScan' in request.endpoint %}
-                            <li class="breadcrumb-item"><a href="{{ url_for('scan') }}">Tipos de Escaneo</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('scan') }}">Escaneos</a></li>
                             {% endif %}
                             <li class="breadcrumb-item">{% block page_title_2 %}{% endblock %}</li>
                         </ol>

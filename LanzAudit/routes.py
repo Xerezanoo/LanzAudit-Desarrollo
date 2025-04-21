@@ -5,13 +5,14 @@ import os
 from flask import render_template, redirect, url_for, flash, request, abort
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
-from models import db, User
+from models import db, User, Scan, ScanResult
 from app import app, mail
 from flask_mail import Message
 from sqlalchemy import func
 from PIL import Image
 from io import BytesIO
 import base64
+from scanners.nmapScanner import runNmapScan, validatePorts
 
 # Rutas para el manejo de errores
 # Error 400 - Solicitud incorrecta
@@ -384,12 +385,19 @@ def logout():
 
 # Ruta para la página de selección de escaneo
 @app.route('/scan', methods=['GET'])
+@login_required
 def scan():
+    if current_user.role not in ['Admin', 'Worker']:
+        abort(403)
     return render_template('scan/scan.html')
 
 # Ruta para redirigir a los formularios específicos
 @app.route('/scan_type', methods=['GET'])
+@login_required
 def scan_type():
+    if current_user.role not in ['Admin', 'Worker']:
+        abort(403)
+
     scan_type = request.args.get('scan_type')
     if scan_type == 'nmap':
         return redirect(url_for('nmapScan'))
@@ -401,11 +409,54 @@ def scan_type():
 
 # Ruta para la ejecución de los escaneos con Nmap
 @app.route('/scan/nmap', methods=['GET', 'POST'])
+@login_required
 def nmapScan():
+    if current_user.role not in ['Admin', 'Worker']:
+        abort(403)
+        
+    if request.method == 'POST':
+        target = request.form.get('target')
+        scan_type = request.form.get('scan_type')
+        ports = request.form.get('ports') if scan_type == 'custom' else None
+
+        # Validar los puertos si es un escaneo personalizado
+        if scan_type == 'custom' and ports:
+            if not validatePorts(ports):
+                flash('Formato de puertos no válido', 'danger')
+                return redirect(url_for('nmapScan'))
+
+        # Ejecutar el escaneo
+        try:
+            hosts, result = runNmapScan(target, scan_type, ports)
+
+            # Guardar en la base de datos
+            new_scan = Scan(
+                user_id=current_user.id,
+                scan_type='Nmap',
+                scan_parameters={"target": target, "scan_type": scan_type, "ports": ports},
+                status='Completado'
+            )
+            db.session.add(new_scan)
+            db.session.commit()
+
+            scan_result = ScanResult(
+                scan_id=new_scan.id,
+                result=result
+            )
+            db.session.add(scan_result)
+            db.session.commit()
+
+            flash('Escaneo realizado con éxito', 'success')
+            return render_template('scan/nmap-scan.html', result=result, target=target, scan_type=scan_type)
+
+        except Exception as error:
+            flash(f'Error al ejecutar el escaneo: {str(error)}', 'danger')
+            return redirect(url_for('nmapScan'))
+
     return render_template('scan/nmap-scan.html')
+
 
 # Ruta para la ejecución de los escaneos con WPScan
 @app.route('/scan/wpscan', methods=['GET', 'POST'])
 def wpscanScan():
     return render_template('scan/wpscan-scan.html')
-

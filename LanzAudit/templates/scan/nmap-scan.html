@@ -9,6 +9,19 @@
   <h2><i class="bi bi-diagram-3-fill me-2"></i> Escaneos con Nmap</h2>
   <p>Selecciona el tipo de escaneo que deseas realizar y proporciona la información necesaria.</p>
 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="alert-container">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  
   <form method="POST" action="{{ url_for('nmapScan') }}">
     <div class="mb-3">
       <label for="target" class="form-label">Dirección IP o dominio</label>

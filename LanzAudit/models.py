@@ -26,7 +26,7 @@ class User(db.Model, UserMixin):
 class Scan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    scan_type = db.Column(db.Enum('Puertos', 'WordPress', name='scan_type_enum'), nullable=False)
+    scan_type = db.Column(db.Enum('Nmap', 'WPScan', name='scan_type_enum'), nullable=False)
     scan_parameters = db.Column(db.JSON, nullable=True)
     status = db.Column(db.Enum('Pendiente', 'En Progreso', 'Completado', 'Fallido', name='status_enum'), default='Pendiente')
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
