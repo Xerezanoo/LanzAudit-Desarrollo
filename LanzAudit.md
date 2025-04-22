@@ -1,3 +1,70 @@
+## Organización Documentación
+### 1. Introducción
+#### 1.1. Introducción
+- Qué es LanzAudit: una herramienta web para realizar escaneos automatizados de seguridad sobre sistemas.
+- Público objetivo: administradores de sistemas, pentesters, técnicos en ciberseguridad, etc.
+- Justificación: necesidad de tener una herramienta centralizada, fácil de usar y extensible.
+
+#### 1.2. Finalidad
+- Facilitar escaneos de seguridad desde una interfaz web.
+- Automatizar tareas comunes de pentesting.
+- Permitir gestión de usuarios, resultados y análisis.
+
+#### 1.3. Objetivos
+- Implementar escaneos de puertos y WordPress en una primera fase.
+- Crear un panel de administración completo y seguro.
+- Ofrecer resultados claros y organizados.
+- Tener un sistema escalable a nuevos tipos de escaneo.
+
+#### 1.4. Medios necesarios
+- Hardware: PC con Linux (Kubuntu).
+- Software: Python, Flask, MariaDB, Nginx, Gunicorn, herramientas como Nmap, WPScan, etc.
+- Otros: Cropper.js, AdminLTE, servicios de correo, etc.
+
+#### 1.5. Planificación
+- Herramienta usada: Taiga con metodología Kanban.
+- Fases del desarrollo: planificación, desarrollo backend, frontend, integración, pruebas, documentación.
+- Tiempo estimado por fase.
+- Desvíos del plan original (si los hubo).
+
+### 2. Realización del Proyecto
+#### 2.1. Trabajos realizados
+- Estructura del proyecto.
+- Registro y login con roles.
+- Gestión de usuarios.
+- Implementación de escaneos y resultados.
+- Formularios, validaciones, envío de correos.
+- Gestión de imágenes de perfil.
+- Seguridad y protección contra errores.
+
+#### 2.2. Problemas encontrados
+- Problemas con integraciones externas (por ejemplo, WPScan o permisos con Nmap).
+- Manejo de imágenes con Cropper.js.
+- Bugs con validaciones o subida de archivos.
+- Seguridad de la base de datos y constraints (como el problema con DELETE y claves foráneas).
+- Manejo de errores HTTP personalizados.
+
+#### 2.3. Modificaciones sobre el proyecto planteado inicialmente
+- Inicialmente iba a usar Django, pero decidiste usar Flask por su ligereza.
+- Añadiste recuperación de contraseña por correo.
+- Implementaste gestión de usuarios más avanzada de lo que pensabas.
+- Algunas funcionalidades previstas se han pospuesto a mejoras futuras.
+
+#### 2.4. Posibles mejoras al proyecto
+- Añadir más tipos de escaneos (Joomla, Drupal, etc.).
+- Escaneos periódicos programados.
+- Exportación de resultados.
+- Dashboard con estadísticas más detalladas.
+- Sistema de logs.
+- Mejora del sistema de permisos.
+
+#### 2.5. Bibliografía
+- Documentación oficial de Flask, Nmap, WPScan...
+- Stack Overflow, foros, artículos técnicos.
+- Apuntes de clase o materiales docentes.
+
+---
+
 ## Framework Backend:
 Flask --> ¿Por qué Flask en vez de Django?
 
