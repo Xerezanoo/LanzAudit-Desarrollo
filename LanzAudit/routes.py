@@ -461,3 +461,26 @@ def nmapScan():
 def wpscanScan():
     return render_template('scan/wpscan-scan.html')
 
+
+
+
+@app.route('/stats')
+def stats():
+    # Obtener todos los escaneos
+    scans = Scan.query.all()
+
+    return render_template('stats.html', scans=scans)
+
+@app.route('/view_scan/<int:scan_id>')
+def view_scan(scan_id):
+    # Ver detalles de un escaneo
+    scan = Scan.query.get_or_404(scan_id)
+    return render_template('scan_detail.html', scan=scan)
+
+@app.route('/delete_scan/<int:scan_id>', methods=['POST'])
+def delete_scan(scan_id):
+    # Eliminar un escaneo
+    scan = Scan.query.get_or_404(scan_id)
+    db.session.delete(scan)
+    db.session.commit()
+    return redirect(url_for('stats'))
