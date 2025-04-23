@@ -460,3 +460,4 @@ def nmapScan():
 @app.route('/scan/wpscan', methods=['GET', 'POST'])
 def wpscanScan():
     return render_template('scan/wpscan-scan.html')
+
