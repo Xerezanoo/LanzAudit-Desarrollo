@@ -55,6 +55,7 @@ def badGateway(error):
 def serviceUnavailable(error):
     return render_template('error/503.html'), 503
 
+
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -381,31 +382,23 @@ def logout():
     return redirect(url_for('login'))
 
 
-
-
 # Ruta para la página de selección de escaneo
-@app.route('/scan', methods=['GET'])
+@app.route('/scan', methods=['GET', 'POST'])
 @login_required
 def scan():
     if current_user.role not in ['Admin', 'Worker']:
         abort(403)
+
+    # Si es un POST, obtenemos el tipo de escaneo del formulario y redirigimos
+    if request.method == 'POST':
+        scan_type = request.form.get('scan_type')
+        if scan_type == 'nmap':
+            return redirect(url_for('nmapScan'))
+        elif scan_type == 'wpscan':
+            return redirect(url_for('wpscanScan'))
+
+    # Si es un GET, solo mostramos el formulario
     return render_template('scan/scan.html')
-
-# Ruta para redirigir a los formularios específicos
-@app.route('/scan_type', methods=['GET'])
-@login_required
-def scan_type():
-    if current_user.role not in ['Admin', 'Worker']:
-        abort(403)
-
-    scan_type = request.args.get('scan_type')
-    if scan_type == 'nmap':
-        return redirect(url_for('nmapScan'))
-    elif scan_type == 'wpscan':
-        return redirect(url_for('wpscanScan'))
-    else:
-        flash("Selección no válida", 'danger')
-        return redirect(url_for('scan'))
 
 # Ruta para la ejecución de los escaneos con Nmap
 @app.route('/scan/nmap', methods=['GET', 'POST'])
@@ -413,23 +406,23 @@ def scan_type():
 def nmapScan():
     if current_user.role not in ['Admin', 'Worker']:
         abort(403)
-        
+
     if request.method == 'POST':
         target = request.form.get('target')
         scan_type = request.form.get('scan_type')
         ports = request.form.get('ports') if scan_type == 'custom' else None
 
-        # Validar los puertos si es un escaneo personalizado
+        # Validar puertos si es personalizado
         if scan_type == 'custom' and ports:
             if not validatePorts(ports):
                 flash('Formato de puertos no válido', 'danger')
                 return redirect(url_for('nmapScan'))
 
-        # Ejecutar el escaneo
         try:
+            # Ejecutar escaneo
             hosts, result = runNmapScan(target, scan_type, ports)
 
-            # Guardar en la base de datos
+            # Guardar escaneo exitoso
             new_scan = Scan(
                 user_id=current_user.id,
                 scan_type='Nmap',
@@ -450,10 +443,22 @@ def nmapScan():
             return render_template('scan/nmap-scan.html', result=result, target=target, scan_type=scan_type)
 
         except Exception as error:
-            flash(f'Error al ejecutar el escaneo: {str(error)}', 'danger')
-            return redirect(url_for('nmapScan'))
+            # Guardar escaneo fallido
+            new_scan = Scan(
+                user_id=current_user.id,
+                scan_type='Nmap',
+                scan_parameters={"target": target, "scan_type": scan_type, "ports": ports},
+                status='Fallido',
+                error_message=str(error)
+            )
+            db.session.add(new_scan)
+            db.session.commit()
+
+            flash('Escaneo fallido', 'danger')
+            return render_template('scan/nmap-scan.html', result=None, target=target, scan_type=scan_type)
 
     return render_template('scan/nmap-scan.html')
+
 
 
 # Ruta para la ejecución de los escaneos con WPScan
@@ -463,24 +468,35 @@ def wpscanScan():
 
 
 
-
+# Ruta para mostrar los resultados y las estadísticas de los escaneos
 @app.route('/stats')
 def stats():
-    # Obtener todos los escaneos
     scans = Scan.query.all()
+    return render_template('scan/stats.html', scans=scans)
 
-    return render_template('stats.html', scans=scans)
-
-@app.route('/view_scan/<int:scan_id>')
-def view_scan(scan_id):
-    # Ver detalles de un escaneo
+# Ruta para ver los detalles de un escaneo en concreto
+@app.route('/stats/<int:scan_id>')
+def viewScan(scan_id):
     scan = Scan.query.get_or_404(scan_id)
-    return render_template('scan_detail.html', scan=scan)
+    return render_template('scan/scan-detail.html', scan=scan)
 
-@app.route('/delete_scan/<int:scan_id>', methods=['POST'])
-def delete_scan(scan_id):
-    # Eliminar un escaneo
+# Ruta para eliminar un escaneo
+@app.route('/stats/delete/<int:scan_id>', methods=['POST'])
+@login_required
+def deleteScan(scan_id):    
     scan = Scan.query.get_or_404(scan_id)
-    db.session.delete(scan)
-    db.session.commit()
+    
+    if current_user.role != 'Admin' and scan.user_id != current_user.id:
+        abort(403)
+    
+    try:
+        # Eliminar los resultados del escaneo antes de eliminar el escaneo
+        ScanResult.query.filter_by(scan_id=scan_id).delete()
+        db.session.delete(scan)
+        db.session.commit()
+        flash(f'Escaneo {scan_id} eliminado correctamente', 'success')
+    except Exception as error:
+        db.session.rollback()
+        flash('Error al eliminar el escaneo', 'danger')
+
     return redirect(url_for('stats'))
