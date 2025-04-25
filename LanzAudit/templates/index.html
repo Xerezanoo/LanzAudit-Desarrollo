@@ -10,7 +10,7 @@
       <div class="row">
         <div class="col-lg-3 col-md-6">
           <div class="card bg-primary text-white mb-4">
-            <div class="card-body">Total Escaneos: <strong>120</strong></div>
+            <div class="card-body">Total Escaneos: <strong>{{ total_scans  }}</strong></div>
           </div>
         </div>
         <div class="col-lg-3 col-md-6">
@@ -20,12 +20,12 @@
         </div>
         <div class="col-lg-3 col-md-6">
           <div class="card bg-success text-white mb-4">
-            <div class="card-body">Hosts Analizados: <strong>80</strong></div>
+            <div class="card-body">Escaneos Nmap: <strong>{{ nmap_scans }}</strong></div>
           </div>
         </div>
         <div class="col-lg-3 col-md-6">
           <div class="card bg-warning text-white mb-4">
-            <div class="card-body">Escaneos en Progreso: <strong>5</strong></div>
+            <div class="card-body">Escaneos WPScan: <strong>{{ wpscan_scans }}</strong></div>
           </div>
         </div>
       </div>
@@ -47,9 +47,14 @@
             <div class="card-header"><h3 class="card-title">Actividad Reciente</h3></div>
             <div class="card-body">
               <ul class="list-group">
-                <li class="list-group-item">[29/03/2025] Escaneo de puertos en 192.168.1.1 - <span class="badge bg-success">Completado</span></li>
-                <li class="list-group-item">[28/03/2025] Escaneo de vulnerabilidades en example.com - <span class="badge bg-danger">Fallido</span></li>
-                <li class="list-group-item">[27/03/2025] Escaneo global en 10.0.0.5 - <span class="badge bg-warning">En Progreso</span></li>
+                {% for activity_item in activity %}
+                  <li class="list-group-item">
+                    [{{ activity_item.date }}] Escaneo de {{ activity_item.type }} en {{ activity_item.target }} - 
+                    <span class="badge {% if activity_item.status == 'Completado' %}bg-success{% elif activity_item.status == 'Fallido' %}bg-danger{% else %}bg-warning{% endif %}">
+                      {{ activity_item.status }}
+                    </span>
+                  </li>
+                {% endfor %}
               </ul>
             </div>
           </div>
@@ -73,20 +78,19 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>192.168.1.1</td>
-                    <td>Escaneo de Puertos</td>
-                    <td>29/03/2025</td>
-                    <td><span class="badge bg-success">Completado</span></td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>example.com</td>
-                    <td>Vulnerabilidades</td>
-                    <td>28/03/2025</td>
-                    <td><span class="badge bg-danger">Fallido</span></td>
-                  </tr>
+                  {% for scan in latest_scans %}
+                    <tr>
+                      <td>{{ scan.id }}</td>
+                      <td>{{ scan.target }}</td>
+                      <td>{{ scan.scan_type }}</td>
+                      <td>{{ scan.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                      <td>
+                        <span class="badge {% if scan.status == 'Completed' %}bg-success{% elif scan.status == 'Failed' %}bg-danger{% else %}bg-warning{% endif %}">
+                          {{ scan.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  {% endfor %}
                 </tbody>
               </table>
             </div>
@@ -107,10 +111,10 @@
       var scanTypeChart = new Chart(ctx, {
         type: 'pie',
         data: {
-          labels: ['Puertos', 'Vulnerabilidades', 'WordPress', 'Joomla'],
+          labels: ['Nmap', 'WPScan'],
           datasets: [{
-            data: [50, 30, 15, 5],
-            backgroundColor: ['#007bff', '#dc3545', '#28a745', '#ffc107']
+            data: [{{ nmap_scans }}, {{ wpscan_scans }}],
+            backgroundColor: ['#007bff', '#28a745']
           }],
         },
         options: {

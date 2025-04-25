@@ -5,6 +5,23 @@
 {% block page_title_2 %}Resultados y Estadísticas{% endblock %}
 
 {% block content %}
+<div class="col-md-12">
+  <div class="card mb-4">
+    <div class="card-header"><h4 class="card-title">Resumen de Actividad</h4></div>
+    <div class="card-body">
+      <div class="row text-center">
+        <div class="col-md-3"><strong>Total Escaneos:</strong> {{ total_scans }}</div>
+        <div class="col-md-3"><strong>Escaneos Completados:</strong> {{ completed_scans }}</div>
+        <div class="col-md-3"><strong>Escaneos Fallidos:</strong> {{ failed_scans }}</div>
+        <div class="col-md-3"><strong>Último Escaneo:</strong> {{ last_scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+        <div class="col-md-6"><strong>Nmap:</strong> {{ total_nmap }}</div>
+        <div class="col-md-6"><strong>WPScan:</strong> {{ total_wpscan }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Escaneos Realizados</h3>

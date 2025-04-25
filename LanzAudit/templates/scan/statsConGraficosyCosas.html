@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}LanzAudit | Estadísticas{% endblock %}
+{% block page_title %}Resultados y Estadísticas{% endblock %}
+{% block page_title_2 %}Resultados y Estadísticas{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Resumen de actividad -->
+  <div class="col-md-12">
+    <div class="card mb-4">
+      <div class="card-header"><h4 class="card-title">Resumen de Actividad</h4></div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-3"><strong>Total Escaneos:</strong> {{ total_scans }}</div>
+          <div class="col-md-3"><strong>Nmap:</strong> {{ total_nmap }}</div>
+          <div class="col-md-3"><strong>WPScan:</strong> {{ total_wpscan }}</div>
+          <div class="col-md-3"><strong>Último Escaneo:</strong> {{ last_scan }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="card-title">Escaneos por Usuario</h5></div>
+      <div class="card-body">
+        <canvas id="userScansChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="card-title">% Completados vs Fallidos</h5></div>
+      <div class="card-body">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vulnerabilidades más comunes -->
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="card-title">Vulnerabilidades Más Comunes</h5></div>
+      <div class="card-body">
+        <ul>
+          {% for vuln in common_vulns %}
+            <li>{{ vuln.name }} - {{ vuln.count }} veces</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Errores más frecuentes -->
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="card-title">Errores Más Frecuentes</h5></div>
+      <div class="card-body">
+        <ul>
+          {% for error in common_errors %}
+            <li>{{ error.message }} - {{ error.count }} veces</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de escaneos -->
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title">Escaneos Realizados</h3>
+      </div>
+      <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          <div class="alert-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endwith %}
+        <table class="table table-bordered table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>ID</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Realizado por</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for scan in scans %}
+            <tr>
+              <td>{{ scan.id }}</td>
+              <td>{{ scan.scan_type }}</td>
+              <td>
+                {% if scan.status == 'Completado' %}
+                  <span class="badge bg-success">Completado</span>
+                {% elif scan.status == 'Fallido' %}
+                  <span class="badge bg-danger">Fallido</span>
+                {% endif %}
+              </td>
+              <td>{{ scan.user.username }}</td>
+              <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+              <td>
+                <a href="{{ url_for('viewScan', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
+                  <i class="bi bi-eye"></i>
+                </a>
+                {% if current_user.role == 'Admin' or current_user.id == scan.user_id %}
+                <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#deleteModal{{ scan.id }}" title="Eliminar">
+                  <i class="bi bi-trash"></i>
+                </button>
+                {% endif %}
+              </td>
+            </tr>
+            <!-- Modal eliminación -->
+            <div class="modal fade" id="deleteModal{{ scan.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ scan.id }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel{{ scan.id }}">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body">¿Eliminar escaneo con ID {{ scan.id }}?</div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="POST" action="{{ url_for('deleteScan', scan_id=scan.id) }}">
+                      <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Scripts de Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const userScansChart = new Chart(document.getElementById('userScansChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ chart_users|tojson }},
+      datasets: [{
+        label: 'Escaneos por Usuario',
+        data: {{ chart_user_counts|tojson }},
+        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+      }]
+    }
+  });
+
+  const statusChart = new Chart(document.getElementById('statusChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Completados', 'Fallidos'],
+      datasets: [{
+        data: [{{ completed_count }}, {{ failed_count }}],
+        backgroundColor: ['#28a745', '#dc3545']
+      }]
+    }
+  });
+</script>
+{% endblock %}

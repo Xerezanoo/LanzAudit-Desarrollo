@@ -167,7 +167,27 @@ def resolveResetRequest(user_id):
 @app.route('/dashboard')
 @login_required
 def home():
-    return render_template("index.html")
+    # Total de escaneos
+    total_scans = Scan.query.count()
+    
+    # Escaneos por tipo (Nmap y WPScan)
+    nmap_scans = Scan.query.filter_by(scan_type='Nmap').count()
+    wpscan_scans = Scan.query.filter_by(scan_type='WPScan').count()
+    
+    # Últimos 5 escaneos
+    latest_scans = Scan.query.order_by(Scan.created_at.desc()).limit(5).all()
+
+    # Actividad reciente (últimos escaneos con su estado)
+    activity = []
+    for scan in latest_scans:
+        activity.append({
+            'date': scan.created_at.strftime('%d/%m/%Y %H:%M'),
+            'target': scan.scan_parameters.get('target'),
+            'type': scan.scan_type,
+            'status': scan.status
+        })
+    
+    return render_template("index.html", total_scans=total_scans, nmap_scans=nmap_scans, wpscan_scans=wpscan_scans, latest_scans=latest_scans, activity=activity)
 
 # Ruta para la página de gestión de usuarios (solo para administradores)
 @app.route('/manage-users')
@@ -448,7 +468,6 @@ def nmapScan():
                 user_id=current_user.id,
                 scan_type='Nmap',
                 scan_parameters={"target": target, "scan_type": scan_type, "ports": ports},
-                status='Fallido',
                 error_message=str(error)
             )
             db.session.add(new_scan)
@@ -469,10 +488,29 @@ def wpscanScan():
 
 
 # Ruta para mostrar los resultados y las estadísticas de los escaneos
-@app.route('/stats')
+@app.route('/stats', methods=['GET'])
 def stats():
     scans = Scan.query.all()
-    return render_template('scan/stats.html', scans=scans)
+    
+    # Contar el total de escaneos
+    total_scans = Scan.query.count()
+    
+    # Contar el total de escaneos completados
+    completed_scans = Scan.query.filter_by(status='Completado').count()
+    
+    # Contar el total de escaneos fallidos
+    failed_scans = Scan.query.filter_by(status='Fallido').count()
+
+    # Último escaneo realizado
+    last_scan = Scan.query.order_by(Scan.created_at.desc()).first()
+    
+    # Escaneos realizados con Nmap
+    total_nmap = Scan.query.filter_by(scan_type='Nmap').count()
+
+    # Escaneos realizados con WPScan
+    total_wpscan = Scan.query.filter_by(scan_type='WPScan').count()
+
+    return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan)
 
 # Ruta para ver los detalles de un escaneo en concreto
 @app.route('/stats/<int:scan_id>')
