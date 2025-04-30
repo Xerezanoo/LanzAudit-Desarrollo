@@ -20,12 +20,14 @@
         </div>
         <div class="col-lg-3 col-md-6">
           <div class="card bg-success text-white mb-4">
-            <div class="card-body">Escaneos Nmap: <strong>{{ nmap_scans }}</strong></div>
+            <div class="card-body">IP más escaneada: <strong>{{ most_scanned_target }}</strong>
+            </div>
           </div>
         </div>
         <div class="col-lg-3 col-md-6">
           <div class="card bg-warning text-white mb-4">
-            <div class="card-body">Escaneos WPScan: <strong>{{ wpscan_scans }}</strong></div>
+            <div class="card-body">Porcentaje de éxito: <strong>{{ completed_percentage }}%</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -61,50 +63,24 @@
         </div>
       </div>
       <!--end::Row de gráficos-->
-      <!--begin::Últimos escaneos-->
+      <!--begin::Gráfico de evolución-->
       <div class="row">
         <div class="col-lg-12">
-          <div class="card">
-            <div class="card-header"><h3 class="card-title">Últimos Escaneos</h3></div>
+          <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Escaneos Realizados por Día</h3></div>
             <div class="card-body">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>IP/Host</th>
-                    <th>Tipo</th>
-                    <th>Fecha</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for scan in latest_scans %}
-                    <tr>
-                      <td>{{ scan.id }}</td>
-                      <td>{{ scan.target }}</td>
-                      <td>{{ scan.scan_type }}</td>
-                      <td>{{ scan.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-                      <td>
-                        <span class="badge {% if scan.status == 'Completed' %}bg-success{% elif scan.status == 'Failed' %}bg-danger{% else %}bg-warning{% endif %}">
-                          {{ scan.status }}
-                        </span>
-                      </td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+              <canvas id="scansOverTimeChart" height="100"></canvas>
             </div>
           </div>
         </div>
       </div>
-      <!--end::Últimos escaneos-->
+      <!--end::Gráfico de evolución-->
     </div>
   </div>
-        <!--end::App Content-->
 {% endblock %}
 
 {% block extra_scripts %}
-    <!--begin::Script para gráficos -->
+    <!--begin::Script para gráfico pastel -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       var ctx = document.getElementById('scanTypeChart').getContext('2d');
@@ -128,5 +104,33 @@
         },
       });
     </script>
-    <!--end::Script para gráficos -->
+    <!--end::Script para gráfico pastel-->
+    <!--begin::Script para gráfico línea -->
+    <script>
+      var ctxTime = document.getElementById('scansOverTimeChart').getContext('2d');
+      var scansOverTimeChart = new Chart(ctxTime, {
+        type: 'line',
+        data: {
+          labels: {{ scan_dates | safe }},
+          datasets: [{
+            label: 'Escaneos por Día',
+            data: {{ scan_counts | safe }},
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0,123,255,0.1)',
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              stepSize: 1
+            }
+          }
+        }
+      });
+    </script>
+    <!--end::Script para gráfico línea-->
 {% endblock %}

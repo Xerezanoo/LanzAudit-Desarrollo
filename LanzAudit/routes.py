@@ -12,7 +12,10 @@ from sqlalchemy import func
 from PIL import Image
 from io import BytesIO
 import base64
+from collections import Counter
+from datetime import datetime
 from scanners.nmapScanner import runNmapScan, validatePorts
+from utils.stats import get_top_open_ports, PORT_SERVICE_NAMES, PORT_ICONS
 
 # Rutas para el manejo de errores
 # Error 400 - Solicitud incorrecta
@@ -187,7 +190,28 @@ def home():
             'status': scan.status
         })
     
-    return render_template("index.html", total_scans=total_scans, nmap_scans=nmap_scans, wpscan_scans=wpscan_scans, latest_scans=latest_scans, activity=activity)
+    # Todos los escaneos (para estadísticas)
+    all_scans = Scan.query.all()
+
+    # IP/Host más escaneado
+    targets = [scan.scan_parameters.get('target') for scan in all_scans if scan.scan_parameters.get('target')]
+    most_common = Counter(targets).most_common(1)
+    most_scanned_target = most_common[0][0] if most_common else 'N/A'
+
+    # Porcentaje de escaneos completados
+    completed = sum(1 for scan in all_scans if scan.status == 'Completado')
+    failed = sum(1 for scan in all_scans if scan.status == 'Fallido')
+    total_done = completed + failed
+    completed_percentage = int((completed / total_done) * 100) if total_done > 0 else 0
+
+    # Escaneos por día (para gráfico de líneas)
+    date_counts = Counter(scan.created_at.strftime('%d/%m') for scan in all_scans)
+    # Ordenar por fecha
+    sorted_dates = sorted(date_counts.keys(), key=lambda x: datetime.strptime(x, "%d/%m"))
+    scan_dates = sorted_dates
+    scan_counts = [date_counts[date] for date in sorted_dates]
+    
+    return render_template("index.html", total_scans=total_scans, nmap_scans=nmap_scans, wpscan_scans=wpscan_scans, latest_scans=latest_scans, activity=activity, most_scanned_target=most_scanned_target, completed_percentage=completed_percentage, scan_dates=scan_dates, scan_counts=scan_counts)
 
 # Ruta para la página de gestión de usuarios (solo para administradores)
 @app.route('/manage-users')
@@ -490,7 +514,7 @@ def wpscanScan():
 # Ruta para mostrar los resultados y las estadísticas de los escaneos
 @app.route('/stats', methods=['GET'])
 def stats():
-    scans = Scan.query.all()
+    scans = Scan.query.order_by(Scan.created_at.desc()).all()
     
     # Contar el total de escaneos
     total_scans = Scan.query.count()
@@ -509,8 +533,21 @@ def stats():
 
     # Escaneos realizados con WPScan
     total_wpscan = Scan.query.filter_by(scan_type='WPScan').count()
+    
+    # Usar la función get_top_open_ports() que está en el archivo stats.py en la carpeta utils/ para obtener los 5 puertos que más veces se han encontrado abiertos
+    top_ports = get_top_open_ports()
+    
+    # Ahora hacemos uso del diccionario PORT_SERVICE_NAMES que hemos creado en util/stats.py también para sustituir los números de los puertos por el nombre del servicio
+    top_ports_named = [
+    {
+        "port": port,
+        "label": PORT_SERVICE_NAMES.get(port, f"Puerto {port}"),
+        "count": count
+    }
+    for port, count in top_ports
+]
 
-    return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan)
+    return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan, top_ports=top_ports_named, PORT_ICONS=PORT_ICONS)
 
 # Ruta para ver los detalles de un escaneo en concreto
 @app.route('/stats/<int:scan_id>')
