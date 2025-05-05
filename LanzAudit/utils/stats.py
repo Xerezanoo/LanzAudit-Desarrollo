@@ -207,3 +207,15 @@ PORT_ICONS = {
     50000: "bi bi-house-door",
     50200: "bi bi-globe"                
 }
+
+def guess_os_by_ttl(ttl):
+    if ttl is None:
+        return "Desconocido"
+    elif ttl >= 128:
+        return "Windows"
+    elif ttl >= 64:
+        return "Linux/Unix"
+    elif ttl >= 32:
+        return "Posible IoT"
+    else:
+        return "Desconocido"

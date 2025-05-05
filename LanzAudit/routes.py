@@ -15,7 +15,7 @@ import base64
 from collections import Counter
 from datetime import datetime
 from scanners.nmapScanner import runNmapScan, validatePorts
-from utils.stats import get_top_open_ports, PORT_SERVICE_NAMES, PORT_ICONS
+from utils.stats import get_top_open_ports, guess_os_by_ttl, PORT_SERVICE_NAMES, PORT_ICONS
 
 # Rutas para el manejo de errores
 # Error 400 - Solicitud incorrecta
@@ -433,14 +433,6 @@ def scan():
     if current_user.role not in ['Admin', 'Worker']:
         abort(403)
 
-    # Si es un POST, obtenemos el tipo de escaneo del formulario y redirigimos
-    if request.method == 'POST':
-        scan_type = request.form.get('scan_type')
-        if scan_type == 'nmap':
-            return redirect(url_for('nmapScan'))
-        elif scan_type == 'wpscan':
-            return redirect(url_for('wpscanScan'))
-
     # Si es un GET, solo mostramos el formulario
     return render_template('scan/scan.html')
 
@@ -453,24 +445,24 @@ def nmapScan():
 
     if request.method == 'POST':
         target = request.form.get('target')
-        scan_type = request.form.get('scan_type')
-        ports = request.form.get('ports') if scan_type == 'custom' else None
+        subtype = request.form.get('subtype')
+        ports = request.form.get('ports') if subtype == 'custom' else None
 
         # Validar puertos si es personalizado
-        if scan_type == 'custom' and ports:
+        if subtype == 'custom' and ports:
             if not validatePorts(ports):
                 flash('Formato de puertos no válido', 'danger')
                 return redirect(url_for('nmapScan'))
 
         try:
             # Ejecutar escaneo
-            hosts, result = runNmapScan(target, scan_type, ports)
+            hosts, result, ttl = runNmapScan(target, subtype, ports)
 
             # Guardar escaneo exitoso
             new_scan = Scan(
                 user_id=current_user.id,
                 scan_type='Nmap',
-                scan_parameters={"target": target, "scan_type": scan_type, "ports": ports},
+                scan_parameters={"target": target, "subtype": subtype, "ports": ports},
                 status='Completado'
             )
             db.session.add(new_scan)
@@ -478,27 +470,28 @@ def nmapScan():
 
             scan_result = ScanResult(
                 scan_id=new_scan.id,
-                result=result
+                result=result,
+                ttl=ttl
             )
             db.session.add(scan_result)
             db.session.commit()
 
             flash('Escaneo realizado con éxito', 'success')
-            return render_template('scan/nmap-scan.html', result=result, target=target, scan_type=scan_type)
+            return render_template('scan/nmap-scan.html', result=result, target=target, subtype=subtype)
 
         except Exception as error:
             # Guardar escaneo fallido
             new_scan = Scan(
                 user_id=current_user.id,
                 scan_type='Nmap',
-                scan_parameters={"target": target, "scan_type": scan_type, "ports": ports},
+                scan_parameters={"target": target, "subtype": subtype, "ports": ports},
                 error_message=str(error)
             )
             db.session.add(new_scan)
             db.session.commit()
 
             flash('Escaneo fallido', 'danger')
-            return render_template('scan/nmap-scan.html', result=None, target=target, scan_type=scan_type)
+            return render_template('scan/nmap-scan.html', result=None, target=target, subtype=subtype)
 
     return render_template('scan/nmap-scan.html')
 

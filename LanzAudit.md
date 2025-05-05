@@ -1040,3 +1040,21 @@ return render_template('error/502.html'), 502
 def serviceUnavailable(error):
 return render_template('error/503.html'), 503
 ```
+
+---
+## Scanners
+### nmapScanner.py
+Vamos a instalar nmap con:
+```bash
+sudo apt install nmap -y
+```
+
+Y le damos permisos para que pueda ejecutar escaneos con permisos de root:
+```bash
+sudo setcap cap_net_raw,cap_net_admin=eip $(which nmap)
+```
+
+Ahora hacemos `sudo visudo` y añadimos la siguiente línea:
+```bash
+tu_usuario	ALL=(ALL) NOPASSWD: /usr/bin/nmap
+```

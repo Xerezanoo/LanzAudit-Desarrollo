@@ -1,26 +1,25 @@
 import nmap
+from utils.ttl import ping_get_ttl
 
 def runNmapScan(target, scan_type, ports=None):
     nm = nmap.PortScanner()
     
+    ttl = ping_get_ttl(target)
+    
     if scan_type == "fast":
         nm.scan(hosts=target, arguments="-F")
     elif scan_type == "full":
-        nm.scan(hosts=target, arguments="-p-")
-    elif scan_type == "os":
-        nm.scan(hosts=target, arguments="-O")
-    elif scan_type == "discovery":
-        nm.scan(hosts=target, arguments="-sn")
+        nm.scan(hosts=target, arguments="-p- -sVC")
     elif scan_type == "versions":
         nm.scan(hosts=target, arguments="-sV")
-    elif scan_type == "aggressive":
-        nm.scan(hosts=target, arguments="-A")
+    elif scan_type == "discovery":
+        nm.scan(hosts=target, arguments="-sn")
     elif scan_type == "custom" and ports:
         nm.scan(hosts=target, ports=ports)
     else:
         return {"error": "Tipo de escaneo inválido o puertos no especificados."}
     
-    return nm.all_hosts(), nm._scan_result
+    return nm.all_hosts(), nm._scan_result, ttl
 
 def validatePorts(ports):
     # Verifica si los puertos están en el formato adecuado (números o rangos como "22,80,443" o "1-1000")

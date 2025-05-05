@@ -22,59 +22,48 @@
   {% endif %}
   {% endwith %}
   
-  <form method="POST" action="{{ url_for('nmapScan') }}">
+  <form method="POST" action="{{ url_for('nmapScan') }}" class="needs-validation" novalidate>
     <div class="mb-3">
       <label for="target" class="form-label">Dirección IP o dominio</label>
       <input type="text" class="form-control" id="target" name="target" required placeholder="Ej: 192.168.1.1 o ejemplo.com">
+      <div class="invalid-feedback">
+        Por favor, ingresa una dirección IP o dominio válido.
+      </div>
     </div>
 
     <div class="mb-4">
       <label class="form-label">Tipo de escaneo</label>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="fast" id="fastScan" required>
+        <input class="form-check-input" type="radio" name="subtype" value="fast" id="fastScan" required>
         <label class="form-check-label" for="fastScan">
           <i class="bi bi-lightning-charge-fill me-1"></i> Escaneo Rápido — Detecta puertos comunes abiertos
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="full" id="fullScan">
+        <input class="form-check-input" type="radio" name="subtype" value="full" id="fullScan">
         <label class="form-check-label" for="fullScan">
-          <i class="bi bi-hdd-stack-fill me-1"></i> Escaneo Completo — Escanea todos los puertos (1-65535)
+          <i class="bi bi-hdd-stack-fill me-1"></i> Escaneo Completo — Escanea todos los puertos (1-65535), muestra versiones de servicios...
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="os" id="osDetection">
-        <label class="form-check-label" for="osDetection">
-          <i class="bi bi-cpu-fill me-1"></i> Detección de Sistema Operativo — Muestra el sistema operativo
-        </label>
-      </div>
-
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="discovery" id="hostDiscovery">
-        <label class="form-check-label" for="hostDiscovery">
-          <i class="bi bi-broadcast-pin me-1"></i> Descubrimiento de Hosts — Encuentra dispositivos en la red
-        </label>
-      </div>
-
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="versions" id="versionDetection">
+        <input class="form-check-input" type="radio" name="subtype" value="versions" id="versionDetection">
         <label class="form-check-label" for="versionDetection">
           <i class="bi bi-terminal-split me-1"></i> Detección de Versiones — Muestra versiones de servicios
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="aggressive" id="aggressiveScan">
-        <label class="form-check-label" for="aggressiveScan">
-          <i class="bi bi-rocket-takeoff-fill me-1"></i> Escaneo Avanzado — Detección completa (OS, servicios, traceroute)
+        <input class="form-check-input" type="radio" name="subtype" value="discovery" id="hostDiscovery">
+        <label class="form-check-label" for="hostDiscovery">
+          <i class="bi bi-broadcast-pin me-1"></i> Descubrimiento de Hosts — Escribe la dirección de una red y encuentra dispositivos de la misma
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="custom" id="customPorts">
+        <input class="form-check-input" type="radio" name="subtype" value="custom" id="customPorts">
         <label class="form-check-label" for="customPorts">
           <i class="bi bi-sliders2-vertical me-1"></i> Escaneo Personalizado — Especifica los puertos que deseas escanear
         </label>
@@ -93,11 +82,33 @@
 {% endblock %}
 
 {% block extra_scripts %}
-
 <script>
+  (() => {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        'submit',
+        (event) => {
+          const submitButton = document.getElementById('submit-btn');
+          const spinner = document.getElementById('spinner');
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          } else {
+            submitButton.disabled = true;
+            spinner.classList.remove('d-none');
+          }
+          form.classList.add('was-validated');
+        },
+        false
+      );
+    });
+  })();
+
   const customRadio = document.getElementById('customPorts');
   const customInput = document.getElementById('customPortsInput');
-  const radios = document.querySelectorAll('input[name="scan_type"]');
+  const radios = document.querySelectorAll('input[name="subtype"]');
   radios.forEach(radio => {
     radio.addEventListener('change', () => {
       customInput.style.display = customRadio.checked ? 'block' : 'none';

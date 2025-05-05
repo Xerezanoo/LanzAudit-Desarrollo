@@ -3,6 +3,7 @@
 # Importación de las librerías necesarias
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from sqlalchemy import JSON
 
 # Inicialización de SQLAlchemy
 db = SQLAlchemy()   # Objeto que interactúa con la BD
@@ -45,6 +46,7 @@ class ScanResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     scan_id = db.Column(db.Integer, db.ForeignKey('scan.id'), nullable=False)
     result = db.Column(db.JSON, nullable=True, default=None)
+    ttl = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     # Relación con el modelo 'Scan' (un escaneo puede tener muchos resultados). Con esta línea podremos acceder a los resultados de los escaneos desde el objeto Scan con Scan.results:
