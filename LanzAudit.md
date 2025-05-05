@@ -1058,3 +1058,30 @@ Ahora hacemos `sudo visudo` y añadimos la siguiente línea:
 ```bash
 tu_usuario	ALL=(ALL) NOPASSWD: /usr/bin/nmap
 ```
+
+Script para pasar de `scan_type` en `scan_parameters` a `subtype`:
+```python
+from app import db
+from models import Scan  # Cambia esto si tu modelo está en otro archivo
+import json
+
+# Buscar todos los escaneos
+scans = Scan.query.all()
+
+for scan in scans:
+    params = scan.scan_parameters
+    if isinstance(params, str):  # Por si estuviera en formato texto
+        params = json.loads(params)
+
+    # Actualizar 'scan_type' a 'subtype' si existe
+    if "scan_type" in params:
+        params["subtype"] = params.pop("scan_type")
+
+    # Asignar los cambios nuevamente a 'scan_parameters'
+    scan.scan_parameters = json.dumps(params)  # Convertir a string nuevamente si es necesario
+
+# Guardar todos los cambios en la base de datos
+db.session.commit()
+print("Todos los registros actualizados.")
+
+```
