@@ -107,6 +107,11 @@
     <!--end::Script para gráfico pastel-->
     <!--begin::Script para gráfico línea -->
     <script>
+      const dpi = window.devicePixelRatio;
+      const canvas = document.getElementById('scansOverTimeChart');
+      canvas.width = canvas.offsetWidth * dpi;
+      canvas.height = canvas.offsetHeight * dpi;
+      canvas.getContext('2d').scale(dpi, dpi);
       var ctxTime = document.getElementById('scansOverTimeChart').getContext('2d');
       var scansOverTimeChart = new Chart(ctxTime, {
         type: 'line',
