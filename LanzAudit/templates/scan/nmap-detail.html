@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Detalles{% endblock %}
+{% block page_title %}Detalle Escaneo Nmap{% endblock %}
+{% block page_title_2 %}Detalle Escaneo Nmap{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  {% set tipos = {'fast': 'Rápido', 'full': 'Completo', 'versions': 'Detección de Versiones', 'discovery': 'Descubrimiento de Hosts', 'custom': 'Personalizado'} %}
+  <h3><i class="bi bi-terminal me-2"></i> Escaneo {{ scan.id }} - Nmap {{ tipos.get(scan.scan_parameters.get('subtype')) }}</h3>
+  <p>
+    <strong>Fecha:</strong> {{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}<br>
+    <strong>Duración:</strong> {{ result['nmap']['scanstats']['elapsed'] }} segundos <br>
+    <strong>Comando:</strong> <code>{{ result['nmap']['command_line'] }}</code>
+  </p>
+
+  {% set ip = result['scan'] | list | first %}
+  {% set host_data = result['scan'][ip] %}
+  {% set estadosPuertos = {'open': 'Abierto', 'closed': 'Cerrado', 'filtered': 'Filtrado'} %}
+  
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3 class="card-title">Información de la Red o del Host escaneado</h3>
+    </div>
+    <div class="card-body">
+      <p><strong>IP:</strong> 
+        {% if host_data['addresses'] and 'ipv4' in host_data['addresses'] %}
+          {{ host_data['addresses']['ipv4'] }}
+        {% else %}
+          No disponible
+        {% endif %}
+      </p>
+      <p><strong>Estado:</strong> {{ host_data['status']['state']|capitalize }}</p>
+      {% if host_data['hostnames'] %}
+        <p><strong>Hostname:</strong> {{ host_data['hostnames'][0]['name'] or '—' }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if scan.scan_parameters.get('subtype') == 'fast' %}
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3 class="card-title">Puertos encontrados</h3>
+    </div>
+    <div class="card-body">  
+      <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th>Puerto</th>
+            <th>Servicio</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for port, port_data in host_data['tcp'].items() %}
+            <tr>
+              <td>{{ port }}</td>
+              <td>{{ port_data['name']|upper }}</td>
+              <td>
+                <span class="badge 
+                {% if port_data['state'] == 'open' %}
+                  bg-success
+                {% elif port_data['state'] == 'filtered' %}
+                  bg-warning text-dark
+                {% elif port_data['state'] == 'closed' %}
+                  bg-danger
+                {% else %}
+                  bg-secondary
+                {% endif %}">
+                {{ estadosPuertos.get(port_data.get('state'), '—') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% elif scan.scan_parameters.get('subtype') in ['full', 'versions'] %}
+  <div class="card mb-3">
+    <div class="card-header bg-secondary text-white">Puertos encontrados</div>
+    <div class="card-body table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Puerto</th>
+            <th>Servicio</th>
+            <th>Aplicación</th>
+            <th>Versión</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for port, port_data in host_data['tcp'].items() %}
+            <tr>
+              <td>{{ port }}</td>
+              <td>{{ port_data['name']|upper }}</td>
+              <td>{{ port_data.get('product', '—') }}</td>
+              <td>{{ port_data.get('version', '—') }}</td>
+              <td>{{ estadosPuertos.get(port_data.get('state'), '—') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% elif scan.scan_parameters.get('subtype') == 'discovery' %}
+    <div class="card mb-3">
+      <div class="card-header bg-secondary text-white">
+        Descubrimiento de Hosts - {{ result['nmap']['scanstats']['uphosts'] }} activos
+      </div>
+      <div class="card-body table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>IP</th>
+              <th>Hostname</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ip, host_data in result['scan'].items() %}
+              {% if host_data['status']['state'] == 'up' %}
+                <tr>
+                  <td>{{ host_data['addresses']['ipv4'] }}</td>
+                  <td>
+                    {% if host_data['hostnames'] and host_data['hostnames'][0]['name'] %}
+                      {{ host_data['hostnames'][0]['name'] }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td>{{ host_data['status']['state']|capitalize }}</td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% elif scan.scan_parameters.get('subtype') == 'custom' %}
+    <div class="card mb-3">
+      <div class="card-header bg-secondary text-white">Puertos encontrados</div>
+      <div class="card-body table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Puerto</th>
+              <th>Servicio</th>
+              <th>Aplicación</th>
+              <th>Versión</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for port, port_data in host_data['tcp'].items() %}
+              <tr>
+                <td>{{ port }}</td>
+                <td>{{ port_data['name']|upper }}</td>
+                <td>{{ port_data.get('product', '—') }}</td>
+                <td>{{ port_data.get('version', '—') }}</td>
+                <td>{{ estadosPuertos.get(port_data.get('state'), '—') }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

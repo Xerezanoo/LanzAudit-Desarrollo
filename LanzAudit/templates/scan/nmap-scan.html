@@ -74,8 +74,9 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-success">
-      <i class="bi bi-search me-1"></i> Iniciar escaneo
+    <button type="submit" class="btn btn-success d-flex align-items-center" id="submit-btn">
+      <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="spinner" aria-hidden="true"></span>
+      <span id="submit-text"><i class="bi bi-search me-1"></i> Iniciar escaneo</span>
     </button>
   </form>
 </div>
@@ -92,12 +93,16 @@
         (event) => {
           const submitButton = document.getElementById('submit-btn');
           const spinner = document.getElementById('spinner');
+          const submitText = document.getElementById('submit-text');
+
           if (!form.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
           } else {
+            // Bloquear botón y mostrar spinner + nuevo texto
             submitButton.disabled = true;
             spinner.classList.remove('d-none');
+            submitText.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Escaneando...';
           }
           form.classList.add('was-validated');
         },
@@ -106,6 +111,7 @@
     });
   })();
 
+  // Mostrar campo de puertos personalizados si se elige esa opción
   const customRadio = document.getElementById('customPorts');
   const customInput = document.getElementById('customPortsInput');
   const radios = document.querySelectorAll('input[name="subtype"]');

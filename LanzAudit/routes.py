@@ -2,6 +2,7 @@
 
 # Importación de las librerías y objetos necesarios
 import os
+import json
 from flask import render_template, redirect, url_for, flash, request, abort
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
@@ -542,11 +543,25 @@ def stats():
 
     return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan, top_ports=top_ports_named, PORT_ICONS=PORT_ICONS)
 
-# Ruta para ver los detalles de un escaneo en concreto
-@app.route('/stats/<int:scan_id>')
-def viewScan(scan_id):
+# Ruta para ver los detalles de un escaneo Nmap en concreto
+@app.route('/stats/nmap/<int:scan_id>')
+def nmapDetail(scan_id):
     scan = Scan.query.get_or_404(scan_id)
-    return render_template('scan/scan-detail.html', scan=scan)
+    scan_result = ScanResult.query.filter_by(scan_id=scan_id).first()
+
+    if not scan_result or not scan_result.result:
+        flash('No se encontró el resultado del escaneo o está vacío.', 'danger')
+        return redirect(url_for('stats')) 
+
+    result = scan_result.result
+
+    if scan.scan_type == 'Nmap':
+        return render_template('scan/nmap-detail.html', scan=scan, result=result)
+    elif scan.scan_type == 'WPScan':
+        return render_template('scan/wpscan-detail.html', scan=scan, result=result)
+    else:
+        flash('Tipo de escaneo desconocido.', 'warning')
+        return redirect(url_for('stats'))
 
 # Ruta para eliminar un escaneo
 @app.route('/stats/delete/<int:scan_id>', methods=['POST'])
