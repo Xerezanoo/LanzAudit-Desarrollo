@@ -18,25 +18,56 @@
   {% set host_data = result['scan'][ip] %}
   {% set estadosPuertos = {'open': 'Abierto', 'closed': 'Cerrado', 'filtered': 'Filtrado'} %}
   
-
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h3 class="card-title">Información de la Red o del Host escaneado</h3>
-    </div>
-    <div class="card-body">
-      <p><strong>IP:</strong> 
-        {% if host_data['addresses'] and 'ipv4' in host_data['addresses'] %}
-          {{ host_data['addresses']['ipv4'] }}
-        {% else %}
-          No disponible
-        {% endif %}
-      </p>
-      <p><strong>Estado:</strong> {{ host_data['status']['state']|capitalize }}</p>
-      {% if host_data['hostnames'] %}
-        <p><strong>Hostname:</strong> {{ host_data['hostnames'][0]['name'] or '—' }}</p>
-      {% endif %}
+  <!--
+  <div class="col-md-12">
+    <div class="card mb-4">
+      <div class="card-header"><h4 class="card-title">Información de la Red o del Host escaneado</h4></div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-list-check fs-2 text-primary"></i>
+                <h5 class="mt-2">IP</h5>
+                <p class="h4">
+                  {{ host_data['addresses']['ipv4'] or 'No disponible'}}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-check-circle fs-2 text-success"></i>
+                <h5 class="mt-2">Estado</h5>
+                <p class="h4">{{ host_data['status']['state']|capitalize }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-x-circle fs-2 text-danger"></i>
+                <h5 class="mt-2">Hostname</h5>
+                <p class="h4">{{ host_data['hostnames'][0]['name'] or 'No disponible' }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <i class="bi bi-clock-history fs-2 text-warning"></i>
+                <h5 class="mt-2">Sistema Operativo (según el TTL)</h5>
+                <p class="h6"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+-->
+
 
   {% if scan.scan_parameters.get('subtype') == 'fast' %}
   <div class="card">
