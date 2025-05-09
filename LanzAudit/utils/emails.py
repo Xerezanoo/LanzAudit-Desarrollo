@@ -2,23 +2,40 @@ from app import mail
 from flask_mail import Message
 from flask import render_template
 from models import User
-from datetime import datetime
 
 def newRequest(user, reason, message):
-    msg = Message(
-        subject="Nueva solicitud de recuperación de contraseña",
-        recipients=[admin.email for admin in User.query.filter_by(role='Admin').all()]
-    )
-    msg.html = render_template('emails/new-request.html', username=user.username, reason=reason, message=message)
-    mail.send(msg)
+    admins = User.query.filter_by(role='Admin').all()
+    for admin in admins:
+        msg = Message(
+            subject="Nueva solicitud de recuperación de contraseña",
+            recipients=[admin.email]
+        )
+        msg.body = f"""
+        Se ha recibido una nueva solicitud de recuperación de contraseña en el sistema:
+
+        Usuario: {user.username}
+        Motivo: {reason}
+        Mensaje adicional: {message}
+        
+        Revisa y completa la solicitud y ponte en contacto por un medio seguro con el usuario afectado para facilitarle la nueva contraseña.
+
+        LanzAudit
+        """
+        mail.send(msg)
 
 def resolvedRequest(user):
-    try:
-        msg = Message(
-            subject="Tu recuperación de contraseña ha sido completada",
-            recipients=[user.email]
-        )
-        msg.html = render_template('emails/resolved-request.html', username=user.username, current_year=datetime.now().year)
-        mail.send(msg)
-    except Exception as e:
-        print(f"Error al enviar el correo: {e}")
+    msg = Message(
+        subject="Tu recuperación de contraseña ha sido completada",
+        recipients=[user.email]
+    )
+    msg.body = f"""
+    Hola {user.username},
+
+    Tu solicitud de recuperación de contraseña ha sido completada, nos pondremos en contacto lo antes posible para facilitarte la nueva contraseña.
+
+    Si no realizaste esta solicitud, por favor contacta con el soporte de LanzAudit.
+    
+    LanzAudit
+    """
+    mail.send(msg)
+    
