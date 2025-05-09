@@ -2,13 +2,11 @@
 
 # Importación de las librerías y objetos necesarios
 import os
-import json
 from flask import render_template, redirect, url_for, flash, request, abort
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 from models import db, User, Scan, ScanResult
 from app import app, mail
-from flask_mail import Message
 from sqlalchemy import func
 from PIL import Image
 from io import BytesIO
@@ -16,7 +14,9 @@ import base64
 from collections import Counter
 from datetime import datetime
 from scanners.nmapScanner import runNmapScan, validatePorts
-from utils.stats import get_top_open_ports, guess_os_by_ttl, PORT_SERVICE_NAMES, PORT_ICONS
+from utils.stats import topOpenPorts, PORT_SERVICE_NAMES, PORT_ICONS
+from utils.ttl import detectOS
+from utils.emails import newRequest, resolvedRequest
 
 # Rutas para el manejo de errores
 # Error 400 - Solicitud incorrecta
@@ -115,8 +115,8 @@ def setupAdmin():
 def passwordRecovery():
     if request.method == 'POST':
         email = request.form['email']
-        motivo = request.form['motivo']
-        mensaje = request.form['mensaje']
+        reason = request.form['motivo']
+        message = request.form['mensaje']
 
         user = User.query.filter_by(email=email).first()
 
@@ -129,11 +129,8 @@ def passwordRecovery():
             user.password_reset_requested_at = func.current_timestamp()
             db.session.commit()
 
-            admins = User.query.filter_by(role='Admin').all()
-            for admin in admins:
-                msg = Message('Nueva solicitud de recuperación de contraseña', recipients=[admin.email])
-                msg.body = f"Usuario: {user.username}\nMotivo: {motivo}\nMensaje adicional: {mensaje}"
-                mail.send(msg)
+            # Llamamos a la función newRequest para notificar a los administradores
+            newRequest(user, reason, message)
 
             flash('Solicitud de recuperación enviada correctamente.', 'success')
             return redirect(url_for('login'))
@@ -148,17 +145,21 @@ def passwordRecovery():
 def resolveResetRequest(user_id):
     if current_user.role != 'Admin':
         abort(403)
-        
+
     user = User.query.get_or_404(user_id)
-    
+
     if request.method == 'POST':
         new_password = request.form['new_password']
-        
+
         if new_password:
             user.password_hash = generate_password_hash(new_password)
             user.password_reset_requested = False
             user.password_reset_requested_at = None
             db.session.commit()
+
+            # Llamamos a la función resolvedRequest para notificar al usuario
+            resolvedRequest(user)
+
             flash('Contraseña cambiada y solicitud resuelta', 'success')
             return redirect(url_for('manageUsers'))
 
@@ -507,8 +508,24 @@ def wpscanScan():
 
 # Ruta para mostrar los resultados y las estadísticas de los escaneos
 @app.route('/stats', methods=['GET'])
+@login_required
 def stats():
-    scans = Scan.query.order_by(Scan.created_at.desc()).all()
+    # Obtener el parámetro de ordenación desde la URL (por defecto es 'date_desc')
+    sort_by = request.args.get('sort', 'date_desc')
+
+    # Diccionario que mapea las opciones de ordenación a las columnas reales de la base de datos
+    sort_options = {
+        'date_desc': Scan.created_at.desc(),
+        'date_asc': Scan.created_at.asc(),
+        'type': Scan.scan_type,
+        'user': Scan.user_id 
+    }
+
+    # Por defecto, ordenamos por fecha descendente
+    order = sort_options.get(sort_by, Scan.created_at.desc()) 
+
+    # Obtener los escaneos ordenados según el parámetro 'sort'
+    scans = Scan.query.order_by(order).all()
     
     # Contar el total de escaneos
     total_scans = Scan.query.count()
@@ -528,8 +545,8 @@ def stats():
     # Escaneos realizados con WPScan
     total_wpscan = Scan.query.filter_by(scan_type='WPScan').count()
     
-    # Usar la función get_top_open_ports() que está en el archivo stats.py en la carpeta utils/ para obtener los 5 puertos que más veces se han encontrado abiertos
-    top_ports = get_top_open_ports()
+    # Usar la función topOpenPorts() que está en el archivo stats.py en la carpeta utils/ para obtener los 5 puertos que más veces se han encontrado abiertos
+    top_ports = topOpenPorts()
     
     # Ahora hacemos uso del diccionario PORT_SERVICE_NAMES que hemos creado en util/stats.py también para sustituir los números de los puertos por el nombre del servicio
     top_ports_named = [
@@ -541,27 +558,28 @@ def stats():
     for port, count in top_ports
 ]
 
-    return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan, top_ports=top_ports_named, PORT_ICONS=PORT_ICONS)
+    return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan, top_ports=top_ports_named, PORT_ICONS=PORT_ICONS, sort_by=sort_by)
 
 # Ruta para ver los detalles de un escaneo Nmap en concreto
 @app.route('/stats/nmap/<int:scan_id>')
+@login_required
 def nmapDetail(scan_id):
     scan = Scan.query.get_or_404(scan_id)
+    error = scan.error_message
     scan_result = ScanResult.query.filter_by(scan_id=scan_id).first()
 
-    if not scan_result or not scan_result.result:
-        flash('No se encontró el resultado del escaneo o está vacío.', 'danger')
-        return redirect(url_for('stats')) 
-
-    result = scan_result.result
-
-    if scan.scan_type == 'Nmap':
-        return render_template('scan/nmap-detail.html', scan=scan, result=result)
-    elif scan.scan_type == 'WPScan':
-        return render_template('scan/wpscan-detail.html', scan=scan, result=result)
-    else:
+    if scan.scan_type != 'Nmap':
         flash('Tipo de escaneo desconocido.', 'warning')
         return redirect(url_for('stats'))
+    
+    if scan.status == 'Fallido':
+        return render_template('scan/nmap-detail.html', scan=scan, error=error)
+        
+    result = scan_result.result
+
+    estimatedOS = detectOS(scan_result.ttl)
+    return render_template('scan/nmap-detail.html', scan=scan, result=result, estimatedOS=estimatedOS)
+        
 
 # Ruta para eliminar un escaneo
 @app.route('/stats/delete/<int:scan_id>', methods=['POST'])

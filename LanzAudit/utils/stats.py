@@ -1,7 +1,7 @@
 from collections import Counter
 from models import ScanResult
 
-def get_top_open_ports(n=5):
+def topOpenPorts(n=5):
     # Obtener todos los resultados de escaneos desde la base de datos
     all_results = ScanResult.query.all()
     
@@ -164,7 +164,7 @@ PORT_ICONS = {
     162: "bi bi-gear",            
     177: "bi bi-window",          
     194: "bi bi-chat",       
-    443: "bi bi-globe",        
+    443: "bi bi-lock",        
     445: "bi bi-server",     
     465: "bi bi-lock",            
     513: "bi bi-terminal",      

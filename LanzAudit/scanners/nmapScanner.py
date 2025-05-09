@@ -1,10 +1,10 @@
 import nmap
-from utils.ttl import ping_get_ttl
+from utils.ttl import pingGetTtl
 
 def runNmapScan(target, scan_type, ports=None):
     nm = nmap.PortScanner()
     
-    ttl = ping_get_ttl(target)
+    ttl = pingGetTtl(target)
     
     if scan_type == "fast":
         nm.scan(hosts=target, arguments="-F")
