@@ -1085,3 +1085,21 @@ db.session.commit()
 print("Todos los registros actualizados.")
 
 ```
+
+### wpscanScanner.py
+Instalamos wpscan:
+```bash
+sudo apt install ruby-full build-essential libcurl4-openssl-dev libssl-dev zlib1g-dev
+```
+```bash
+sudo gem install wpscan
+```
+
+
+Nos damos de alta en la página para generar nuestra API Key. Tenemos 25 peticiones gratuitas al día.
+
+
+Para parsear el resultado de forma más bonita y fácil de leer, instalamos el paquete `wpscan-out-parse`, que es un proyecto que está en GitHub (https://github.com/tristanlatr/wpscan_out_parse):
+```bash
+pip3 install wpscan-out-parse
+```

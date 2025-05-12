@@ -7,7 +7,8 @@
 {% block content %}
 <div class="container mt-4">
   {% set tipos = {'fast': 'Rápido', 'full': 'Completo', 'versions': 'Versiones de Servicios', 'discovery': 'Descubrimiento de Hosts', 'custom': 'Personalizado'} %}
-  <h3><i class="bi bi-terminal me-2"></i> Escaneo {{ scan.id }} - Nmap {{ tipos.get(scan.scan_parameters.get('subtype')) or "" }}</h3>
+  <h3><i class="bi bi-diagram-3-fill me-2"></i> Escaneo {{ scan.id }} - Nmap {{ tipos.get(scan.scan_parameters.get('subtype')) or "" }}</h3>
+  
   {% if scan.status == 'Fallido' %}
     <div class="col-12 mb-4">
       <div class="card border-danger shadow-lg text-center">
@@ -123,7 +124,56 @@
       </div>
     </div>
 
-    {% elif scan.scan_parameters.get('subtype') in ['full', 'versions', 'custom'] %}
+    {% elif scan.scan_parameters.get('subtype') == 'full' %}
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title">Puertos encontrados</h3>
+      </div>
+      <div class="card-body">  
+        <table class="table table-bordered table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>Puerto</th>
+              <th>Servicio</th>
+              <th>Aplicación</th>
+              <th>Versión</th>
+              <th>Estado</th>
+              <th>Información adicional</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for port, port_data in host_data.get('tcp', {}).items() %}
+              <tr>
+                <td>{{ port }}</td>
+                <td>{{ port_data.get('name', 'No disponible')|upper }}</td>
+                <td>{{ port_data.get('product', 'No disponible') }}</td>
+                <td>{{ port_data.get('version', 'No disponible') }}</td>
+                <td>
+                  <span class="badge 
+                  {% if port_data.get('state') == 'open' %}
+                    bg-success
+                  {% elif port_data.get('state') == 'filtered' %}
+                    bg-warning text-dark
+                  {% elif port_data.get('state') == 'closed' %}
+                    bg-danger
+                  {% else %}
+                    bg-secondary
+                  {% endif %}">
+                  {{ estadosPuertos.get(port_data.get('state'), 'No disponible') }}</td>
+                <td>
+                  {% for script, script_result in port_data.get('script', {}).items() %}
+                    <strong>{{ script }}:</strong><br>
+                    <code>{{ script_result }}</code><br><br>
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% elif scan.scan_parameters.get('subtype') in ['versions', 'custom'] %}
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Puertos encontrados</h3>

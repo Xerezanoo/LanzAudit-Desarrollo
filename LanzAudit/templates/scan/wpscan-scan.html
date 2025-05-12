@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}LanzAudit | Escaneo WPScan{% endblock %}
-{% block page_title %}Escaneo WPScan{% endblock %}
+{% block title %}LanzAudit | WPScan{% endblock %}
+{% block page_title %}WPScan{% endblock %}
 {% block page_title_2 %}WPScan{% endblock %}
 
 {% block content %}
@@ -9,59 +9,75 @@
   <h2><i class="bi bi-wordpress me-2"></i> Escaneos con WPScan</h2>
   <p>Selecciona el tipo de escaneo que deseas realizar y proporciona la información necesaria.</p>
 
-  <form method="POST" action="{{ url_for('wpscanScan') }}">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="alert-container">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('WPScan') }}" class="needs-validation" novalidate>
     <div class="mb-3">
       <label for="target" class="form-label">Dirección del sitio WordPress</label>
       <input type="text" class="form-control" id="target" name="target" required placeholder="Ej: https://ejemplo.com">
+      <div class="invalid-feedback">
+        Por favor, ingresa una dirección IP o dominio válido.
+      </div>
     </div>
 
     <div class="mb-4">
       <label class="form-label">Tipo de escaneo</label>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="basic" id="basicScan" required>
+        <input class="form-check-input" type="radio" name="subtype" value="basic" id="basicScan" required>
         <label class="form-check-label" for="basicScan">
           <i class="bi bi-house-door me-1"></i> Escaneo Básico — Detecta temas y plugins comunes
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="vulns" id="vulnScan">
+        <input class="form-check-input" type="radio" name="subtype" value="vulns" id="vulnScan">
         <label class="form-check-label" for="vulnScan">
           <i class="bi bi-shield-lock me-1"></i> Detección de Vulnerabilidades — Muestra vulnerabilidades conocidas
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="plugins" id="pluginScan">
+        <input class="form-check-input" type="radio" name="subtype" value="plugins" id="pluginScan">
         <label class="form-check-label" for="pluginScan">
           <i class="bi bi-box me-1"></i> Escaneo de Plugins — Enumera los plugins instalados en el sitio
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="themes" id="themeScan">
+        <input class="form-check-input" type="radio" name="subtype" value="themes" id="themeScan">
         <label class="form-check-label" for="themeScan">
           <i class="bi bi-palette me-1"></i> Escaneo de Temas — Enumera los temas activos del sitio
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="users" id="userScan">
+        <input class="form-check-input" type="radio" name="subtype" value="users" id="userScan">
         <label class="form-check-label" for="userScan">
           <i class="bi bi-person me-1"></i> Escaneo de Usuarios — Detecta los usuarios registrados
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="aggressive" id="aggressiveScan">
-        <label class="form-check-label" for="aggressiveScan">
+        <input class="form-check-input" type="radio" name="subtype" value="advanced" id="advancedScan">
+        <label class="form-check-label" for="advancedScan">
           <i class="bi bi-flame me-1"></i> Escaneo Avanzado — Detecta más información detallada sobre el sitio
         </label>
       </div>
 
       <div class="form-check">
-        <input class="form-check-input" type="radio" name="scan_type" value="custom" id="customScan">
+        <input class="form-check-input" type="radio" name="subtype" value="custom" id="customScan">
         <label class="form-check-label" for="customScan">
           <i class="bi bi-sliders2-vertical me-1"></i> Escaneo Personalizado — Escoge las opciones específicas que deseas escanear
         </label>
@@ -72,8 +88,9 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-success">
-      <i class="bi bi-search me-1"></i> Iniciar escaneo
+    <button type="submit" class="btn btn-success d-flex align-items-center" id="submit-btn">
+      <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="spinner" aria-hidden="true"></span>
+      <span id="submit-text"><i class="bi bi-search me-1"></i> Iniciar escaneo</span>
     </button>
   </form>
 </div>
@@ -81,9 +98,36 @@
 
 {% block extra_scripts %}
 <script>
+  (() => {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        'submit',
+        (event) => {
+          const submitButton = document.getElementById('submit-btn');
+          const spinner = document.getElementById('spinner');
+          const submitText = document.getElementById('submit-text');
+
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          } else {
+            // Bloquear botón y mostrar spinner + nuevo texto
+            submitButton.disabled = true;
+            spinner.classList.remove('d-none');
+            submitText.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Escaneando...';
+          }
+          form.classList.add('was-validated');
+        },
+        false
+      );
+    });
+  })();
+
   const customRadio = document.getElementById('customScan');
   const customInput = document.getElementById('customScanInput');
-  const radios = document.querySelectorAll('input[name="scan_type"]');
+  const radios = document.querySelectorAll('input[name="subtype"]');
   radios.forEach(radio => {
     radio.addEventListener('change', () => {
       customInput.style.display = customRadio.checked ? 'block' : 'none';
@@ -91,4 +135,3 @@
   });
 </script>
 {% endblock %}
-

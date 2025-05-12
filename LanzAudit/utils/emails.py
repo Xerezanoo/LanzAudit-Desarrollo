@@ -1,6 +1,5 @@
 from app import mail
 from flask_mail import Message
-from flask import render_template
 from models import User
 
 def newRequest(user, reason, message):

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Detalles{% endblock %}
+{% block page_title %}Detalle Escaneo WPScan{% endblock %}
+{% block page_title_2 %}Detalle Escaneo WPScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  {% set tipos = {'basic': 'Básico', 'vulns': 'Vulnerabilidades', 'plugins': 'Plugins', 'themes': 'Temas', 'users': 'Usuarios', 'advanced': 'Avanzado', 'custom': 'Personalizado'} %}
+  <h3><i class="bi bi-wordpress me-2"></i> Escaneo {{ scan.id }} - WPScan {{ tipos.get(scan.scan_parameters.get('subtype')) or "" }}</h3>
+
+  {% if scan.status == 'Fallido' %}
+    <div class="col-12 mb-4">
+      <div class="card border-danger shadow-lg text-center">
+        <div class="card-body">
+          <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+          <h2 class="text-danger mt-3">Escaneo Fallido</h2>
+          <p class="mt-3 fs-5 text-muted">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p>
+      <strong>Fecha:</strong> {{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}<br>
+      <strong>Duración:</strong> {{ result.get('elapsed') }} segundos<br>
+      <strong>Comando:</strong>
+      {% if scan.scan_parameters.get('subtype') == 'basic' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json</code>
+      {% elif scan.scan_parameters.get('subtype') == 'vulns' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate vp, vt</code>
+      {% elif scan.scan_parameters.get('subtype') == 'plugins' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate p</code>
+      {% elif scan.scan_parameters.get('subtype') == 'themes' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate t</code>
+      {% elif scan.scan_parameters.get('subtype') == 'users' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate u</code>
+      {% elif scan.scan_parameters.get('subtype') == 'advanced' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate ap,at,cb,dbe,m,tt,u,vp,vt</code>
+      {% elif scan.scan_parameters.get('subtype') == 'custom' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json {{ scan.scan_parameters.get('options') }}</code>
+      {% else %}
+      <code>No disponible</code>
+      {% endif %}
+    </p>
+
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <i class="bi bi-globe fs-2 text-primary"></i>
+            <h5 class="mt-2">URL Escaneada</h5>
+            <p class="h5">{{ result.get('target_url') if result else 'No disponible' }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <i class="bi bi-wordpress fs-2 text-secondary"></i>
+            <h5 class="mt-2">Versión</h5>
+            <p class="h5">
+              {% if result and result.version %}
+                {{ result.version.number or 'Desconocida' }}
+              {% else %}
+                No detectada
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if result.interesting_findings %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h4 class="card-title">Detalles interesantes</h4>
+      </div>
+      <div class="card-body">
+        <ul class="list-group">
+          {% for finding in result.interesting_findings %}
+          <li class="list-group-item">
+            <strong>{{ finding.title or 'Sin título' }}</strong><br>
+            <span class="text-muted">{{ finding.to_s }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if result.plugins %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h4 class="card-title">Plugins Detectados</h4>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>Nombre</th>
+              <th>Versión</th>
+              <th>Vulnerabilidades</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for plugin_name, plugin_data in result.plugins.items() %}
+            <tr>
+              <td>{{ plugin_name }}</td>
+              <td>{{ plugin_data.version.number or 'Desconocida' }}</td>
+              <td>
+                {% set vulns = plugin_data.vulnerabilities %}
+                {% if vulns %}
+                  <span class="badge bg-danger">{{ vulns|length }}</span>
+                {% else %}
+                  <span class="badge bg-success">0</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

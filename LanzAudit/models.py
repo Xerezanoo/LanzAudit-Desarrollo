@@ -3,7 +3,6 @@
 # Importación de las librerías necesarias
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from sqlalchemy import JSON
 
 # Inicialización de SQLAlchemy
 db = SQLAlchemy()   # Objeto que interactúa con la BD

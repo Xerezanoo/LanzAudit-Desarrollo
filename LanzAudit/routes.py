@@ -5,15 +5,17 @@ import os
 from flask import render_template, redirect, url_for, flash, request, abort
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
-from models import db, User, Scan, ScanResult
-from app import app, mail
 from sqlalchemy import func
 from PIL import Image
 from io import BytesIO
 import base64
 from collections import Counter
 from datetime import datetime
+from wpscan_out_parse import parse_results_from_file
+from models import db, User, Scan, ScanResult
+from app import app
 from scanners.nmapScanner import runNmapScan, validatePorts
+from scanners.wpscanScanner import runWPScan
 from utils.stats import topOpenPorts, PORT_SERVICE_NAMES, PORT_ICONS
 from utils.ttl import detectOS
 from utils.emails import newRequest, resolvedRequest
@@ -501,7 +503,54 @@ def nmapScan():
 
 # Ruta para la ejecución de los escaneos con WPScan
 @app.route('/scan/wpscan', methods=['GET', 'POST'])
-def wpscanScan():
+@login_required
+def WPScan():
+    if current_user.role not in ['Admin', 'Worker']:
+        abort(403)
+        
+    if request.method == 'POST':
+        target = request.form.get('target')
+        subtype = request.form.get('subtype')
+        options = request.form.get('options') if subtype == "custom" else None
+        
+        try:
+            # Ejecutar WPScan
+            result = runWPScan(target, subtype, options)
+
+            # Crear registro de Scan
+            new_scan = Scan(
+                user_id=current_user.id,
+                scan_type="WPScan",
+                scan_parameters={"target": target, "subtype": subtype, "options": options},
+                status="Completado"
+            )
+            db.session.add(new_scan)
+            db.session.commit() 
+            
+            scan_result = ScanResult(
+                scan_id=new_scan.id,
+                result=result
+            )
+            db.session.add(scan_result)
+            db.session.commit()
+            
+            flash('Escaneo realizado con éxito', 'success')
+            return render_template('scan/wpscan-scan.html', result=result, target=target, subtype=subtype, options=options)
+        
+        except Exception as error:
+            # Guardar escaneo fallido
+            new_scan = Scan(
+                user_id = current_user.id,
+                scan_type='WPScan',
+                scan_parameters={"target": target, "subtype": subtype, "options": options},
+                error_message=str(error)
+            )
+            db.session.add(new_scan)
+            db.session.commit()
+
+            flash('Escaneo fallido', 'danger')
+            return render_template('scan/wpscan-scan.html', result=None, target=target, subtype=subtype, options=options)
+
     return render_template('scan/wpscan-scan.html')
 
 
@@ -579,7 +628,24 @@ def nmapDetail(scan_id):
 
     estimatedOS = detectOS(scan_result.ttl)
     return render_template('scan/nmap-detail.html', scan=scan, result=result, estimatedOS=estimatedOS)
-        
+
+# Ruta para ver los detalles de un escaneo WPScan en concreto
+@app.route('/stats/wpscan/<int:scan_id>')
+@login_required
+def wpscanDetail(scan_id):
+    scan = Scan.query.get_or_404(scan_id)
+    error = scan.error_message
+    scan_result = ScanResult.query.filter_by(scan_id=scan_id).first()
+
+    if scan.scan_type != 'WPScan':
+        flash('Tipo de escaneo desconocido.', 'warning')
+        return redirect(url_for('stats'))
+
+    if scan.status == 'Fallido':
+        return render_template('scan/wpscan-detail.html', scan=scan, error=error)
+
+    result = scan_result.result
+    return render_template('scan/wpscan-detail.html', scan=scan, result=result)
 
 # Ruta para eliminar un escaneo
 @app.route('/stats/delete/<int:scan_id>', methods=['POST'])

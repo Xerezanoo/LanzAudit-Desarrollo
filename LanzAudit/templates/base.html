@@ -164,7 +164,7 @@
                             {% if 'addUser' in request.endpoint or 'editUser' in request.endpoint %}
                             <li class="breadcrumb-item"><a href="{{ url_for('manageUsers') }}">Gestión de Usuarios</a></li>
                             {% endif %}
-                            {% if 'nmapScan' in request.endpoint or 'wpscanScan' in request.endpoint %}
+                            {% if 'nmapScan' in request.endpoint or 'WPScan' in request.endpoint %}
                             <li class="breadcrumb-item"><a href="{{ url_for('scan') }}">Escaneos</a></li>
                             {% endif %}
                             {% if 'nmapDetail' in request.endpoint or 'wpscanDetail' in request.endpoint %}
