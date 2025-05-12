@@ -43,32 +43,57 @@
       {% endif %}
     </p>
 
-    <div class="row mb-4">
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body text-center">
-            <i class="bi bi-globe fs-2 text-primary"></i>
-            <h5 class="mt-2">URL Escaneada</h5>
-            <p class="h5">{{ result.get('target_url') if result else 'No disponible' }}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card shadow-sm">
-          <div class="card-body text-center">
-            <i class="bi bi-wordpress fs-2 text-secondary"></i>
-            <h5 class="mt-2">Versión</h5>
-            <p class="h5">
-              {% if result and result.version %}
-                {{ result.version.number or 'Desconocida' }}
-              {% else %}
-                No detectada
-              {% endif %}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="col-md-12">
+      <div class="card mb-4">
+        <div class="card-header"><h4 class="card-title">Información de la página WordPress escaneada</h4></div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <i class="bi bi-globe fs-2 text-primary"></i>
+                  <h5 class="mt-2">URL</h5>
+                  <p class="h4">
+                    {{ result.get('target_url') if result else 'No disponible' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <i class="bi bi-wordpress fs-2 text-secondary"></i>
+                  <h5 class="mt-2">Versión de WordPress</h5>
+                  <p class="h4">
+                    {% if result and result.version %}
+                      {{ result.version.number or 'Desconocida' }}
+                    {% else %}
+                      No detectada
+                    {% endif %}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <i class="bi bi-search fs-2 text-danger"></i>
+                  <h5 class="mt-2">Detalles encontrados</h5>
+                  <p class="h4">{{ result.get('interesting_findings', []) | length }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body text-center">
+                  <i class="bi bi-palette-fill fs-2 text-warning"></i>
+                  <h5 class="mt-2">Tema activo</h5>
+                  <p class="h4">
+                    {{ result.get('main_theme', {}).get('slug', 'Desconocido')|capitalize }}
+                  </p>
+                </div>
+              </div>
+            </div>
 
     {% if result.interesting_findings %}
     <div class="card mb-4">
@@ -77,10 +102,13 @@
       </div>
       <div class="card-body">
         <ul class="list-group">
-          {% for finding in result.interesting_findings %}
+          {% for find in result.get('interesting_findings', []) %}
           <li class="list-group-item">
-            <strong>{{ finding.title or 'Sin título' }}</strong><br>
-            <span class="text-muted">{{ finding.to_s }}</span>
+            <div class="card my-2 p-2 border-left border-info">
+              <strong>{{ find.to_s.split(':')[0] or 'Sin título' }}</strong><br>
+              <small>Detectado por: {{ find.found_by }} (Confianza: {{ find.confidence }}%)</small>
+              <span class="text-muted">{{ find.to_s.split(': ')[1] }}</span>
+            </div>
           </li>
           {% endfor %}
         </ul>
