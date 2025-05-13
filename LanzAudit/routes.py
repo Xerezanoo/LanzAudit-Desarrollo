@@ -516,8 +516,8 @@ def WPScan():
         try:
             # Ejecutar WPScan
             result = runWPScan(target, subtype, options)
-
-            # Crear registro de Scan
+            
+            # Crear escaneo
             new_scan = Scan(
                 user_id=current_user.id,
                 scan_type="WPScan",
@@ -525,22 +525,26 @@ def WPScan():
                 status="Completado"
             )
             db.session.add(new_scan)
-            db.session.commit() 
-            
+            db.session.commit()
+
+            # Guardar la ruta del archivo en el registro
             scan_result = ScanResult(
                 scan_id=new_scan.id,
-                result=result
+                result={
+                    "summary": result["summary"],
+                    "details": result["details"]
+                }
             )
             db.session.add(scan_result)
             db.session.commit()
-            
+
             flash('Escaneo realizado con éxito', 'success')
             return render_template('scan/wpscan-scan.html', result=result, target=target, subtype=subtype, options=options)
-        
+
         except Exception as error:
             # Guardar escaneo fallido
             new_scan = Scan(
-                user_id = current_user.id,
+                user_id=current_user.id,
                 scan_type='WPScan',
                 scan_parameters={"target": target, "subtype": subtype, "options": options},
                 error_message=str(error)

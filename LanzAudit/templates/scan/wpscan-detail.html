@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="container mt-4">
-  {% set tipos = {'basic': 'Básico', 'vulns': 'Vulnerabilidades', 'plugins': 'Plugins', 'themes': 'Temas', 'users': 'Usuarios', 'advanced': 'Avanzado', 'custom': 'Personalizado'} %}
+  {% set tipos = {'basic': 'Básico', 'vulns': 'Vulnerabilidades', 'plugins': 'Plugins', 'themes': 'Temas', 'users': 'Usuarios', 'custom': 'Personalizado'} %}
   <h3><i class="bi bi-wordpress me-2"></i> Escaneo {{ scan.id }} - WPScan {{ tipos.get(scan.scan_parameters.get('subtype')) or "" }}</h3>
 
   {% if scan.status == 'Fallido' %}
@@ -34,8 +34,6 @@
       <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate t</code>
       {% elif scan.scan_parameters.get('subtype') == 'users' %}
       <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate u</code>
-      {% elif scan.scan_parameters.get('subtype') == 'advanced' %}
-      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate ap,at,cb,dbe,m,tt,u,vp,vt</code>
       {% elif scan.scan_parameters.get('subtype') == 'custom' %}
       <code>wpscan --url {{ result.get('target_url') }} --format json {{ scan.scan_parameters.get('options') }}</code>
       {% else %}
