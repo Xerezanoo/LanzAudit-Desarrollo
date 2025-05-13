@@ -29,19 +29,17 @@ def runWPScan(target, subtype, options=None):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = process.communicate(timeout=180)
 
-        # Guardar logs en archivos para inspección
-        with open('wpscan_stdout.log', 'w', encoding='utf-8') as f:
-            f.write(stdout)
-        with open('wpscan_stderr.log', 'w', encoding='utf-8') as f:
-            f.write(stderr)
+        try:
+            return json.loads(stdout)
+        except json.JSONDecodeError as e:
+            return {
+                "error": "Error al parsear la salida JSON de WPScan.",
+                "exception": str(e),
+                "raw_output": stdout,
+                "stderr": stderr
+            }
 
-        if process.returncode == 0:
-            try:
-                return json.loads(stdout)
-            except json.JSONDecodeError as e:
-                return {"error": f"Error al convertir la salida a JSON: {str(e)}"}
-        else:
-            return {"error": stderr or "Error desconocido en WPScan."}
-    
     except subprocess.TimeoutExpired:
         return {"error": "El escaneo ha tardado demasiado y fue interrumpido."}
+    except Exception as error:
+        return {"error": f"Error inesperado al ejecutar WPScan: {str(error)}"}

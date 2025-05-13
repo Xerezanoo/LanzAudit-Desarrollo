@@ -517,9 +517,6 @@ def WPScan():
             # Ejecutar WPScan
             result = runWPScan(target, subtype, options)
             
-            if "error" in result:
-                raise Exception(result["error"])
-            
             # Crear escaneo
             new_scan = Scan(
                 user_id=current_user.id,
