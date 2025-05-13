@@ -517,6 +517,9 @@ def WPScan():
             # Ejecutar WPScan
             result = runWPScan(target, subtype, options)
             
+            if "error" in result:
+                raise Exception(result["error"])
+            
             # Crear escaneo
             new_scan = Scan(
                 user_id=current_user.id,
@@ -530,10 +533,7 @@ def WPScan():
             # Guardar la ruta del archivo en el registro
             scan_result = ScanResult(
                 scan_id=new_scan.id,
-                result={
-                    "summary": result["summary"],
-                    "details": result["details"]
-                }
+                result=result
             )
             db.session.add(scan_result)
             db.session.commit()

@@ -26,43 +26,22 @@ def runWPScan(target, subtype, options=None):
         cmd.extend(options.strip().split())
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
-        if result.returncode == 0:
-            data = json.loads(result.stdout)
-            return {
-                "summary": extractSummary(data, subtype),
-                "details": data
-            }
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate(timeout=180)
+
+        # Guardar logs en archivos para inspección
+        with open('wpscan_stdout.log', 'w', encoding='utf-8') as f:
+            f.write(stdout)
+        with open('wpscan_stderr.log', 'w', encoding='utf-8') as f:
+            f.write(stderr)
+
+        if process.returncode == 0:
+            try:
+                return json.loads(stdout)
+            except json.JSONDecodeError as e:
+                return {"error": f"Error al convertir la salida a JSON: {str(e)}"}
         else:
-            return {"error": result.stderr}
+            return {"error": stderr or "Error desconocido en WPScan."}
+    
     except subprocess.TimeoutExpired:
         return {"error": "El escaneo ha tardado demasiado y fue interrumpido."}
-
-
-# Función de filtrado de resultados para obtener un resumen
-def extractSummary(data, subtype):
-    summary = {
-        "url": data.get("target_url", "No disponible"),
-        "version": data.get("version", {}).get("number", "Desconocida"),
-        "interestingFindings": len(data.get('interesting_findings', [])),
-        "mainTheme": data.get('main_theme', {}).get('slug', 'Desconocido').capitalize()
-    }
-
-    if subtype == "basic":
-        summary["totalVulns"] = len(data.get("vulnerabilities", []))
-    elif subtype == "vulns":
-        important = sum(1 for v in data.get("vulnerabilities", []) if v.get("severity") == "high")
-        low = sum(1 for v in data.get("vulnerabilities", []) if v.get("severity") == "low")
-        summary.update({
-            "totalVulns": len(data.get("vulnerabilities", [])),
-            "importantVulns": important,
-            "nonImportantVulns": low
-        })
-    elif subtype == "plugins":
-        summary["totalPlugins"] = len(data.get("plugins", []))
-    elif subtype == "themes":
-        summary["totalThemes"] = len(data.get("themes", []))
-    elif subtype == "users":
-        summary["totalUsers"] = len(data.get("users", []))
-
-    return summary
