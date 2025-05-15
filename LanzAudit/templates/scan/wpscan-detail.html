@@ -54,7 +54,7 @@
                   <i class="bi bi-globe fs-2 text-primary"></i>
                   <h5 class="mt-2">URL</h5>
                   <p class="h4">
-                    {{ result.get('target_url') }}
+                    {{ result.target_url }}
                   </p>
                 </div>
               </div>
@@ -89,8 +89,7 @@
                   <i class="bi bi-plug fs-2 text-info"></i>
                   <h5 class="mt-2">Plugins activos</h5>
                   <p class="h4">
-                    {% set active_plugins = result.plugins | selectattr('value', 'defined') | selectattr('value.active', 'equalto', True) | list %}
-                    {{ active_plugins | length }}
+                    {{ result.plugins | length }}
                   </p>
                 </div>
               </div>
@@ -116,7 +115,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <h4 class="card-title">
-          Detalles interesantes - ({{ result.interesting_findings | length }})
+          Detalles interesantes - {{ result.interesting_findings | length }}
         </h4>
       </div>
       <div class="card-body p-0">
@@ -126,6 +125,7 @@
               <th>Nombre</th>
               <th>Encontrado por</th>
               <th>Confianza</th>
+              <th>Datos extra</th>
               <th>URL</th>
             </tr>
           </thead>
@@ -135,6 +135,15 @@
               <td>{{ finding.to_s.split(':')[0] }}</td>
               <td>{{ finding.found_by }}</td>
               <td>{{ finding.confidence }}%</td>
+              <td>
+                {% if finding.interesting_entries %}
+                  {% for entry in finding.interesting_entries %}
+                    <li class="list-group-item">{{ entry }}</li>
+                  {% endfor %}
+                {% else %}
+                  <li class="list-group-item">-</li>
+                {% endif %}
+              </td>
               <td><a href="{{ finding.url }}" target="_blank" rel="noopener noreferrer">{{ finding.url }}</a></td>
             </tr>
             {% endfor %}
@@ -148,7 +157,7 @@
     <div class="card mb-4">
       <div class="card-header">
         <h4 class="card-title">
-          Vulnerabilidades detectadas - ({{ vulnerabilities | length }})
+          Vulnerabilidades de la versión de WordPress detectada - {{ vulnerabilities | length }}
         </h4>
       </div>
       <div class="card-body p-0">
@@ -199,73 +208,91 @@
     {% endif %}
 
     {% if main_theme %}
-    <div class="card mb-4">
-      <div class="card-header">
-        <h4 class="card-title">Tema Activo</h4>
-      </div>
-      <div class="card-body">
-        <ul>
-          <li><strong>Nombre:</strong> {{ main_theme.style_name }}</li>
-          <li><strong>Versión:</strong> {{ main_theme.version.number or 'Desconocida' }}</li>
-          <li>
-            <strong>¿Está actualizado?:</strong>
-            {% if not main_theme.outdated %}
-              <span class="badge bg-success">Sí</span>
-            {% else %}
-              <span class="badge bg-danger">No</span>
-            {% endif %}
-          </li>
-        </ul>
-        {% if main_theme.vulnerabilities %}
-          <h4 class="card-title">
-          Vulnerabilidades detectadas - ({{ main_theme.vulnerabilities | length }})
-          </h4>
+      <div class="card mb-4">
+        <div class="card-header">
+          <h4 class="card-title">Tema activo</h4>
+        </div>
+        <div class="card-body p-0">
           <table class="table table-bordered table-hover mb-0">
-          <thead class="thead-dark">
-            <tr>
-              <th>Título</th>
-              <th>Corregida en</th>
-              <th>CVE</th>
-              <th>Referencias</th>
-            </tr>
-          </thead>
-          <tbody>
-              {% for vuln in main_theme.vulnerabilities %}
+            <thead class="thead-dark">
               <tr>
-                  <td>{{ vuln.title }}</td>
-                  <td>
-                      {% if vuln.fixed_in %}
-                          {{ vuln.fixed_in }}
-                      {% else %}
-                          <span class="badge bg-danger">Sin corregir</span>
-                      {% endif %}
-                  </td>
-                  <td>
-                      {% if vuln.references.cve %}
-                          {% for cve in vuln.references.cve %}
-                              <span class="badge bg-secondary">{{ cve }}</span><br>
-                          {% endfor %}
-                      {% else %}
-                          <span class="text-muted">-</span>
-                      {% endif %}
-                  </td>
-                  <td>
-                      {% if vuln.references.url %}
-                          {% for url in vuln.references.url %}
-                              <a href="{{ url }}" target="_blank" class="d-block text-truncate" style="max-width: 300px;">{{ url }}</a>
-                          {% endfor %}
-                      {% else %}
-                          <span class="text-muted">-</span>
-                      {% endif %}
-                  </td>
+                <th>Nombre</th>
+                <th>Versión</th>
+                <th>¿Está actualizado?</th>
               </tr>
-              {% endfor %}
-          </tbody>
-        </table>
-      {% endif %}
-    {% endif %}
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ main_theme.style_name }}</td>
+                <td>{{ main_theme.version.number or 'Desconocida' }}</td>
+                <td>
+                  {% if not main_theme.outdated %}
+                    <span class="badge bg-success">Sí</span>
+                  {% else %}
+                    <span class="badge bg-danger">No</span>
+                  {% endif %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <br>
+          {% if main_theme.vulnerabilities %}
+            <div class="p-4">
+              <h5 class="card-title">
+                Vulnerabilidades del tema activo - {{ main_theme.vulnerabilities | length }}
+              </h5>
+              <table class="table table-bordered table-hover">
+                <thead class="thead-dark">
+                  <tr>
+                    <th>Título</th>
+                    <th>Corregida en</th>
+                    <th>CVE</th>
+                    <th>Referencias</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for vuln in main_theme.vulnerabilities %}
+                    <tr>
+                      <td>{{ vuln.title }}</td>
+                      <td>
+                        {% if vuln.fixed_in %}
+                          {{ vuln.fixed_in }}
+                        {% else %}
+                          <span class="badge bg-danger">Sin corregir</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if vuln.references.cve %}
+                          {% for cve in vuln.references.cve %}
+                            <span class="badge bg-secondary">{{ cve }}</span><br>
+                          {% endfor %}
+                        {% else %}
+                          <span class="text-muted">-</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if vuln.references.url %}
+                          {% for url in vuln.references.url %}
+                            <a href="{{ url }}" target="_blank" class="d-block text-truncate" style="max-width: 300px;">{{ url }}</a>
+                          {% endfor %}
+                        {% else %}
+                          <span class="text-muted">-</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
       </div>
-    </div>
+    {% endif %}
+
+
+
+
+        
 
     {% if result.plugins %}
     <div class="card mb-4">
