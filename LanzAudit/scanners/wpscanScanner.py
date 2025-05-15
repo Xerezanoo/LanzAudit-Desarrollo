@@ -12,7 +12,7 @@ def runWPScan(target, subtype, options=None):
 
     cmd = ["wpscan", "--url", target, "--api-token", WPSCAN_API_KEY, "--format", "json"]
 
-    if subtype == "basic":
+    if subtype == "full":
         pass
     elif subtype == "vulns":
         cmd.extend(["--enumerate", "vp,vt"])
