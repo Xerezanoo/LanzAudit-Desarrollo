@@ -11,7 +11,6 @@ from io import BytesIO
 import base64
 from collections import Counter
 from datetime import datetime
-from wpscan_out_parse import parse_results_from_file
 from models import db, User, Scan, ScanResult
 from app import app
 from scanners.nmapScanner import runNmapScan, validatePorts
@@ -517,6 +516,9 @@ def WPScan():
             # Ejecutar WPScan
             result = runWPScan(target, subtype, options)
             
+            if result.get('scan_aborted'):
+                raise ValueError(result.get('scan_aborted'))
+            
             # Crear escaneo
             new_scan = Scan(
                 user_id=current_user.id,
@@ -526,7 +528,6 @@ def WPScan():
             )
             db.session.add(new_scan)
             db.session.commit()
-
             # Guardar la ruta del archivo en el registro
             scan_result = ScanResult(
                 scan_id=new_scan.id,
@@ -534,9 +535,8 @@ def WPScan():
             )
             db.session.add(scan_result)
             db.session.commit()
-
             flash('Escaneo realizado con éxito', 'success')
-            return render_template('scan/wpscan-scan.html', result=result, target=target, subtype=subtype, options=options)
+            return render_template('scan/wpscan-scan.html', result=result, target=target, subtype=subtype, options=options)          
 
         except Exception as error:
             # Guardar escaneo fallido

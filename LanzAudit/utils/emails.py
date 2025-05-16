@@ -31,10 +31,7 @@ def resolvedRequest(user):
     Hola {user.username},
 
     Tu solicitud de recuperación de contraseña ha sido completada, nos pondremos en contacto lo antes posible para facilitarte la nueva contraseña.
-
-    Si no realizaste esta solicitud, por favor contacta con el soporte de LanzAudit.
     
     LanzAudit
     """
     mail.send(msg)
-    

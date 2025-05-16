@@ -12,14 +12,16 @@ def runWPScan(target, subtype, options=None):
 
     cmd = ["wpscan", "--url", target, "--api-token", WPSCAN_API_KEY, "--format", "json"]
 
-    if subtype == "full":
+    if subtype == "basic":
         pass
+    elif subtype == "full":
+        cmd.extend(["--enumerate", "ap,at,cb,dbe,u", "--plugins-detection", "aggressive"])
     elif subtype == "vulns":
         cmd.extend(["--enumerate", "vp,vt"])
     elif subtype == "plugins":
-        cmd.extend(["--enumerate", "p"])
+        cmd.extend(["--enumerate", "ap", "--plugins-detection", "aggressive"])
     elif subtype == "themes":
-        cmd.extend(["--enumerate", "t"])
+        cmd.extend(["--enumerate", "at", "--themes-detection", "aggressive"])
     elif subtype == "users":
         cmd.extend(["--enumerate", "u"])
     elif subtype == "custom" and options:
@@ -28,17 +30,21 @@ def runWPScan(target, subtype, options=None):
     try:
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = process.communicate(timeout=180)
-
+    
         try:
             return json.loads(stdout)
         except json.JSONDecodeError as e:
+            if "Scan Aborted:" in stdout:
+                return {
+                    "scan_aborted": stdout.strip()
+                }
             return {
                 "error": "Error al parsear la salida JSON de WPScan.",
                 "exception": str(e),
                 "raw_output": stdout,
                 "stderr": stderr
             }
-
+    
     except subprocess.TimeoutExpired:
         return {"error": "El escaneo ha tardado demasiado y fue interrumpido."}
     except Exception as error:

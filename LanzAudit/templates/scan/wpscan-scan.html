@@ -35,9 +35,16 @@
       <label class="form-label">Tipo de escaneo</label>
 
       <div class="form-check">
+        <input class="form-check-input" type="radio" name="subtype" value="full" id="basicScan" required>
+        <label class="form-check-label" for="basicScan">
+          <i class="bi bi-rocket-takeoff me-1"></i> Escaneo Básico — Análisis rápido de vulnerabilidades comunes
+        </label>
+      </div>
+
+      <div class="form-check">
         <input class="form-check-input" type="radio" name="subtype" value="full" id="fullScan" required>
         <label class="form-check-label" for="fullScan">
-          <i class="bi bi-rocket-takeoff me-1"></i> Escaneo Completo — Detecta vulnerabilidades, enumera plugins, temas... 
+          <i class="bi bi-search me-1"></i> Escaneo Completo — Análisis profundo para detectar vulnerabilidades, plugins, temas, usuarios y archivos sensibles
         </label>
       </div>
 
