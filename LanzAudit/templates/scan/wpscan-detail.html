@@ -29,13 +29,13 @@
       {% if scan.scan_parameters.get('subtype') == 'basic' %}
       <code>wpscan --url {{ result.get('target_url') }} --format json</code>
       {% elif scan.scan_parameters.get('subtype') == 'full' %}
-      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate ap,at,cb,dbe,u</code>
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate ap,at,cb,u --plugins-detection aggressive</code>
       {% elif scan.scan_parameters.get('subtype') == 'vulns' %}
       <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate vp, vt</code>
       {% elif scan.scan_parameters.get('subtype') == 'plugins' %}
       <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate ap --plugins-detection aggressive</code>
       {% elif scan.scan_parameters.get('subtype') == 'themes' %}
-      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate at --themes-detection aggressive</code>
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate at</code>
       {% elif scan.scan_parameters.get('subtype') == 'users' %}
       <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate u</code>
       {% elif scan.scan_parameters.get('subtype') == 'custom' %}
@@ -85,6 +85,7 @@
                 </div>
               </div>
             </div>
+            {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'plugins', 'custom'] %}
             <div class="col-md-3 mb-3">
               <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -96,6 +97,7 @@
                 </div>
               </div>
             </div>
+            {% endif %}
             <div class="col-md-3 mb-3">
               <div class="card shadow-sm">
                 <div class="card-body text-center">
@@ -117,7 +119,7 @@
         <div class="card mb-4">
           <div class="card-header">
             <h4 class="card-title">
-              Detalles interesantes - {{ result.interesting_findings | length }}
+              Detalles Interesantes - {{ result.interesting_findings | length }}
             </h4>
           </div>
           <div class="card-body p-0">
@@ -218,7 +220,7 @@
       {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'custom'] %}
         <div class="card mb-4">
           <div class="card-header">
-            <h4 class="card-title">Tema activo</h4>
+            <h4 class="card-title">Tema Activo</h4>
           </div>
           <div class="card-body p-0">
             <table class="table table-bordered table-hover mb-0">
@@ -303,7 +305,7 @@
       {% if scan.scan_parameters.get('subtype') in ['full', 'themes', 'custom'] %}
         <div class="card mb-4">
           <div class="card-header">
-            <h4 class="card-title">Temas detectados</h4>
+            <h4 class="card-title">Temas Detectados</h4>
           </div>
           <div class="card-body p-0">
             <table class="table table-bordered table-hover mb-0">
@@ -318,18 +320,13 @@
                 {% for theme_name, theme_data in result.themes.items() %}
                   <tr>
                     <td>{{ theme_name | capitalize or 'Desconocido' }}</td>
-                  <!-- 
                     <td>
                       {% if main_theme and theme_name == main_theme.style_name %}
-                        {% if theme_data.version.number %}
-                          {{ theme_data.version.number }}
-                        {% elif main_theme and theme_name == main_theme.style_name %}
-                          {{ main_theme.version.number }}
-                        {% else %}
-                          Desconocida
-                        {% endif %}
+                        {{ main_theme.version.number or 'Desconocida' }}
+                      {% else %}
+                        {{ theme_data.version.number or 'Desconocida' }}
+                      {% endif %}
                     </td>
-                  -->
                     <td>
                       {% if main_theme and theme_name == main_theme.style_name %}
                         {% if not main_theme.outdated %}
@@ -413,7 +410,7 @@
       {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'plugins', 'custom'] %}
         <div class="card mb-4">
           <div class="card-header">
-            <h4 class="card-title">Plugins detectados</h4>
+            <h4 class="card-title">Plugins Detectados</h4>
           </div>
           <div class="card-body p-0">
             <table class="table table-bordered table-hover mb-0">
@@ -515,12 +512,38 @@
               <tbody>
                 {% for username, data in result.users.items() %}
                   <tr>
-                    <td>{{ loop.index }}</td>
+                    <td>
+                      {% if data.id is none %}
+                        Desconocido
+                      {% else %}
+                        {{ data.id }}
+                      {% endif %}
+                    </td>
                     <td>{{ username }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
             </table>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+
+    {% if result.config_backups %}
+      {% if scan.scan_parameters.get('subtype') in ['full', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">Copias de Seguridad de Configuración Expuestas</h4>
+          </div>
+          <div class="card-body p-3">
+            <ul class="list-group">
+              {% for backup in result.config_backups %}
+                <li class="list-group-item">
+                  <a href="{{ backup }}" target="_blank">{{ backup }}</a>
+                </li>
+              {% endfor %}
+            </ul>
           </div>
         </div>
       {% endif %}

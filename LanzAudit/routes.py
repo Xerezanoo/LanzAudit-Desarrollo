@@ -11,11 +11,11 @@ from io import BytesIO
 import base64
 from collections import Counter
 from datetime import datetime
-from models import db, User, Scan, ScanResult
+from models import db, User, Scan, ScanResults
 from app import app
 from scanners.nmapScanner import runNmapScan, validatePorts
 from scanners.wpscanScanner import runWPScan
-from utils.stats import topOpenPorts, PORT_SERVICE_NAMES, PORT_ICONS
+from utils.stats import topOpenPorts, PORT_SERVICE_NAMES, PORT_ICONS, totalVulns, topThemes, topPlugins, vulnerablePlugins, vulnerableThemes
 from utils.ttl import detectOS
 from utils.emails import newRequest, resolvedRequest
 
@@ -214,7 +214,10 @@ def home():
     scan_dates = sorted_dates
     scan_counts = [date_counts[date] for date in sorted_dates]
     
-    return render_template("index.html", total_scans=total_scans, nmap_scans=nmap_scans, wpscan_scans=wpscan_scans, latest_scans=latest_scans, activity=activity, most_scanned_target=most_scanned_target, completed_percentage=completed_percentage, scan_dates=scan_dates, scan_counts=scan_counts)
+    # Total de vulnerabilidades encontradas con WPScan (de versiones de WordPress, de temas, de plugins...)
+    total_vulns=totalVulns()
+    
+    return render_template("index.html", total_scans=total_scans, nmap_scans=nmap_scans, wpscan_scans=wpscan_scans, latest_scans=latest_scans, activity=activity, most_scanned_target=most_scanned_target, completed_percentage=completed_percentage, scan_dates=scan_dates, scan_counts=scan_counts, total_vulns=total_vulns)
 
 # Ruta para la página de gestión de usuarios (solo para administradores)
 @app.route('/manage-users')
@@ -471,7 +474,7 @@ def nmapScan():
             db.session.add(new_scan)
             db.session.commit()
 
-            scan_result = ScanResult(
+            scan_result = ScanResults(
                 scan_id=new_scan.id,
                 result=result,
                 ttl=ttl
@@ -519,6 +522,9 @@ def WPScan():
             if result.get('scan_aborted'):
                 raise ValueError(result.get('scan_aborted'))
             
+            if result.get('not_fully_configured'):
+                raise ValueError("La web está en modo instalación de WordPress. No se puede escanear.")
+            
             # Crear escaneo
             new_scan = Scan(
                 user_id=current_user.id,
@@ -529,7 +535,7 @@ def WPScan():
             db.session.add(new_scan)
             db.session.commit()
             # Guardar la ruta del archivo en el registro
-            scan_result = ScanResult(
+            scan_result = ScanResults(
                 scan_id=new_scan.id,
                 result=result
             )
@@ -606,9 +612,15 @@ def stats():
         "count": count
     }
     for port, count in top_ports
-]
+    ]
+    
+    # Y por último, ponemos las estadísticas de WPScan
+    top_themes = topThemes()
+    top_plugins = topPlugins()
+    vulnerable_plugins = vulnerablePlugins()
+    vulnerable_themes = vulnerableThemes()
 
-    return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan, top_ports=top_ports_named, PORT_ICONS=PORT_ICONS, sort_by=sort_by)
+    return render_template('scan/stats.html', scans=scans, total_scans=total_scans, completed_scans=completed_scans, failed_scans=failed_scans, last_scan=last_scan, total_nmap=total_nmap, total_wpscan=total_wpscan, top_ports=top_ports_named, PORT_ICONS=PORT_ICONS, sort_by=sort_by, top_themes=top_themes, top_plugins=top_plugins, vulnerable_plugins=vulnerable_plugins, vulnerable_themes=vulnerable_themes)
 
 # Ruta para ver los detalles de un escaneo Nmap en concreto
 @app.route('/stats/nmap/<int:scan_id>')
@@ -616,7 +628,7 @@ def stats():
 def nmapDetail(scan_id):
     scan = Scan.query.get_or_404(scan_id)
     error = scan.error_message
-    scan_result = ScanResult.query.filter_by(scan_id=scan_id).first()
+    scan_result = ScanResults.query.filter_by(scan_id=scan_id).first()
 
     if scan.scan_type != 'Nmap':
         flash('Tipo de escaneo desconocido.', 'warning')
@@ -636,7 +648,7 @@ def nmapDetail(scan_id):
 def wpscanDetail(scan_id):
     scan = Scan.query.get_or_404(scan_id)
     error = scan.error_message
-    scan_result = ScanResult.query.filter_by(scan_id=scan_id).first()
+    scan_result = ScanResults.query.filter_by(scan_id=scan_id).first()
 
     if scan.scan_type != 'WPScan':
         flash('Tipo de escaneo desconocido.', 'warning')
@@ -659,7 +671,7 @@ def deleteScan(scan_id):
     
     try:
         # Eliminar los resultados del escaneo antes de eliminar el escaneo
-        ScanResult.query.filter_by(scan_id=scan_id).delete()
+        ScanResults.query.filter_by(scan_id=scan_id).delete()
         db.session.delete(scan)
         db.session.commit()
         flash(f'Escaneo {scan_id} eliminado correctamente', 'success')

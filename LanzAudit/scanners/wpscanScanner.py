@@ -15,13 +15,13 @@ def runWPScan(target, subtype, options=None):
     if subtype == "basic":
         pass
     elif subtype == "full":
-        cmd.extend(["--enumerate", "ap,at,cb,dbe,u", "--plugins-detection", "aggressive"])
+        cmd.extend(["--enumerate", "ap,at,cb,u", "--plugins-detection", "aggressive"])
     elif subtype == "vulns":
         cmd.extend(["--enumerate", "vp,vt"])
     elif subtype == "plugins":
         cmd.extend(["--enumerate", "ap", "--plugins-detection", "aggressive"])
     elif subtype == "themes":
-        cmd.extend(["--enumerate", "at", "--themes-detection", "aggressive"])
+        cmd.extend(["--enumerate", "at"])
     elif subtype == "users":
         cmd.extend(["--enumerate", "u"])
     elif subtype == "custom" and options:

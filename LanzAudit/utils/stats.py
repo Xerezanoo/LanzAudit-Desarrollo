@@ -1,9 +1,13 @@
+import json
 from collections import Counter
-from models import ScanResult
+from models import Scan,ScanResults
 
 def topOpenPorts(n=5):
     # Obtener todos los resultados de escaneos desde la base de datos
-    all_results = ScanResult.query.all()
+    all_results = ScanResults.query.join(Scan).filter(
+        Scan.scan_type == 'Nmap',
+        Scan.status == 'Completado'
+    ).all()
     
     # Crear un contador para contar las veces que se han encontrado los puertos abiertos
     port_counter = Counter()
@@ -25,9 +29,9 @@ def topOpenPorts(n=5):
                     # Si el puerto está abierto, contarlo
                     if port_data.get("state") == "open":
                         port_counter[int(port)] += 1
-        except Exception as e:
+        except Exception as error:
             # Si ocurre un error, mostrar un mensaje y continuar con el siguiente resultado
-            print(f"Error procesando scan_result {result.id}: {e}")
+            print(f"Error procesando scan_result {result.id}: {error}")
             continue
 
     # Devolver los 'n' puertos más comunes con sus cuentas
@@ -208,14 +212,129 @@ PORT_ICONS = {
     50200: "bi bi-globe"                
 }
 
-def guess_os_by_ttl(ttl):
-    if ttl is None:
-        return "Desconocido"
-    elif ttl >= 128:
-        return "Windows"
-    elif ttl >= 64:
-        return "Linux/Unix"
-    elif ttl >= 32:
-        return "Posible IoT"
-    else:
-        return "Desconocido"
+def totalVulns():
+    wpscan_results = ScanResults.query.join(Scan).filter(
+        Scan.scan_type == 'WPScan',
+        Scan.status == 'Completado'
+    ).all()
+
+    total_vulns = 0
+
+    for result in wpscan_results:
+        try:
+            data = result.result 
+
+            if isinstance(data, str):
+                data = json.loads(data)
+
+            if 'plugins' in data:
+                for plugin in data['plugins'].values():
+                    vulns = plugin.get('vulnerabilities', [])
+                    total_vulns += len(vulns)
+
+            if 'themes' in data:
+                for theme in data['themes'].values():
+                    vulns = theme.get('vulnerabilities', [])
+                    total_vulns += len(vulns)
+
+            if 'version' in data and 'vulnerabilities' in data['version']:
+                total_vulns += len(data['version']['vulnerabilities'])
+
+        except Exception as error:
+            print(f"Error procesando resultado WPScan: {error}")
+
+    return total_vulns
+
+def topThemes(n=5):
+    all_results = ScanResults.query.join(Scan).filter(
+        Scan.scan_type == 'WPScan',
+        Scan.status == 'Completado'
+    ).all()
+    themes_counter = Counter()
+
+    for result in all_results:
+        try:
+            data = result.result if isinstance(result.result, dict) else json.loads(result.result)
+            themes_data = data.get("themes", {})
+
+            for slug, theme_info in themes_data.items():
+                theme_name = theme_info.get("style_name", slug)
+                themes_counter[theme_name] += 1
+
+        except Exception as error:
+            print(f"Error procesando scan_result {result.id}: {error}")
+            continue
+
+    # Devolver lista de diccionarios para el render
+    return [{"name": a, "count": b} for a, b in themes_counter.most_common(n)]
+
+def topPlugins(n=5):
+    all_results = ScanResults.query.join(Scan).filter(
+        Scan.scan_type == 'WPScan',
+        Scan.status == 'Completado'
+    ).all()
+    plugins_counter = Counter()
+
+    for result in all_results:
+        try:
+            data = result.result if isinstance(result.result, dict) else json.loads(result.result)
+            plugins_data = data.get("plugins", {})
+
+            for slug, plugin_info in plugins_data.items():
+                plugin_name = plugin_info.get("slug", slug)
+                if plugin_name != "*":
+                    plugins_counter[plugin_name] += 1
+
+        except Exception as error:
+            print(f"Error procesando scan_result {result.id}: {error}")
+            continue
+
+    return [{"name": a, "count": b} for a, b in plugins_counter.most_common(n)]
+
+def vulnerableThemes(n=5):
+    all_results = ScanResults.query.join(Scan).filter(
+        Scan.scan_type == 'WPScan',
+        Scan.status == 'Completado'
+    ).all()
+    vuln_counter = Counter()
+
+    for result in all_results:
+        try:
+            data = result.result if isinstance(result.result, dict) else json.loads(result.result)
+            themes_data = data.get("themes", {})
+
+            for slug, theme_info in themes_data.items():
+                vulns = theme_info.get("vulnerabilities", [])
+                if vulns:
+                    theme_name = theme_info.get("style_name", slug)
+                    vuln_counter[theme_name] += len(vulns)
+
+        except Exception as e:
+            print(f"Error procesando scan_result {result.id}: {e}")
+            continue
+
+    return [{"name": a, "count": b} for a, b in vuln_counter.most_common(n)]
+
+def vulnerablePlugins(n=5):
+    all_results = ScanResults.query.join(Scan).filter(
+        Scan.scan_type == 'WPScan',
+        Scan.status == 'Completado'
+    ).all()
+    vuln_counter = Counter()
+
+    for result in all_results:
+        try:
+            data = result.result if isinstance(result.result, dict) else json.loads(result.result)
+            plugins_data = data.get("plugins", {})
+
+            for slug, plugin_info in plugins_data.items():
+                vulns = plugin_info.get("vulnerabilities", [])
+                if slug != "*" and vulns:
+                    plugin_name = plugin_info.get("slug", slug)
+                    vuln_counter[plugin_name] += len(vulns)
+
+        except Exception as error:
+            print(f"Error procesando scan_result {result.id}: {error}")
+            continue
+
+    return [{"name": a, "count": b} for a, b in vuln_counter.most_common(n)]

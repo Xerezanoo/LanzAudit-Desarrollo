@@ -39,7 +39,7 @@ class Scan(db.Model):
         return f'<Escaneo {self.id} - {self.scan_type}>'    # Escaneo 1 - Puertos
 
 # Modelo de la tabla 'scan_results' (Resultado de los escaneos)
-class ScanResult(db.Model):
+class ScanResults(db.Model):
     __tablename__ = 'scan_results'
 
     id = db.Column(db.Integer, primary_key=True)
