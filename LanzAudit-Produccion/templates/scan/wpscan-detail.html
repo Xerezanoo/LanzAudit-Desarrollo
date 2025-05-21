@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Detalles{% endblock %}
+{% block page_title %}Detalle Escaneo WPScan{% endblock %}
+{% block page_title_2 %}Detalle Escaneo WPScan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  {% set tipos = {'basic': 'Básico', 'full': 'Completo', 'vulns': 'Vulnerabilidades', 'plugins': 'Plugins', 'themes': 'Temas', 'users': 'Usuarios', 'custom': 'Personalizado'} %}
+  <h3><i class="bi bi-wordpress me-2"></i> Escaneo {{ scan.id }} - WPScan {{ tipos.get(scan.scan_parameters.get('subtype')) or "" }}</h3>
+
+  {% if scan.status == 'Fallido' %}
+    <div class="col-12 mb-4">
+      <div class="card border-danger shadow-lg text-center">
+        <div class="card-body">
+          <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+          <h2 class="text-danger mt-3">Escaneo Fallido</h2>
+          <p class="mt-3 fs-5 text-muted">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+  {% elif result %}
+    {% set main_theme = result.get('main_theme') %}
+    {% set vulnerabilities = result.version.vulnerabilities %}
+    <p>
+      <strong>Fecha:</strong> {{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}<br>
+      <strong>Duración:</strong> {{ result.get('elapsed') }} segundos<br>
+      <strong>Comando:</strong>
+      {% if scan.scan_parameters.get('subtype') == 'basic' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json</code>
+      {% elif scan.scan_parameters.get('subtype') == 'full' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate ap,at,cb,u --plugins-detection aggressive</code>
+      {% elif scan.scan_parameters.get('subtype') == 'vulns' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate vp, vt</code>
+      {% elif scan.scan_parameters.get('subtype') == 'plugins' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate ap --plugins-detection aggressive</code>
+      {% elif scan.scan_parameters.get('subtype') == 'themes' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate at</code>
+      {% elif scan.scan_parameters.get('subtype') == 'users' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json --enumerate u</code>
+      {% elif scan.scan_parameters.get('subtype') == 'custom' %}
+      <code>wpscan --url {{ result.get('target_url') }} --format json {{ scan.scan_parameters.get('options') }}</code>
+      {% else %}
+      <code>No disponible</code>
+      {% endif %}
+    </p>
+
+    <div class="col-md-12">
+      <div class="card mb-4">
+        <div class="card-header"><h4 class="card-title">Información de la página WordPress escaneada</h4></div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <i class="bi bi-globe fs-2 text-primary"></i>
+                  <h5 class="mt-2">URL</h5>
+                  <p class="h4">
+                    {{ result.target_url }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <i class="bi bi-wordpress fs-2 text-secondary"></i>
+                  <h5 class="mt-2">Versión de WordPress</h5>
+                  <p class="h4">
+                    {% if result.version %}
+                      {{ result.version.number or 'Desconocida' }} <br>
+                      <small class="text-muted" style="font-size: 1rem;">
+                        Fecha de salida: {{ result.version.release_date }}
+                      </small>
+                      <br>
+                      {% if result.version.status == "latest" %}
+                        <span class="badge bg-success mt-2" style="font-size: 0.75rem;">Actualizado</span>
+                      {% else %}
+                        <span class="badge bg-danger mt-2" style="font-size: 0.75rem;">Desactualizado</span>
+                      {% endif %}
+                    {% else %}
+                      No detectada
+                    {% endif %}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'plugins', 'custom'] %}
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body text-center">
+                  <i class="bi bi-plug fs-2 text-info"></i>
+                  <h5 class="mt-2">Plugins</h5>
+                  <p class="h4">
+                    {{ result.plugins | length }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            <div class="col-md-3 mb-3">
+              <div class="card shadow-sm">
+                <div class="card-body text-center">
+                  <i class="bi bi-palette-fill fs-2 text-warning"></i>
+                  <h5 class="mt-2">Tema activo</h5>
+                  <p class="h4">
+                    {{ (main_theme.slug if main_theme and main_theme.slug else 'Desconocido')|capitalize }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if result.interesting_findings %}
+      {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">
+              Detalles Interesantes - {{ result.interesting_findings | length }}
+            </h4>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Encontrado por</th>
+                  <th>Confianza</th>
+                  <th>Datos extra</th>
+                  <th>URL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for finding in result.interesting_findings %}
+                <tr>
+                  <td>{{ finding.to_s.split(':')[0] }}</td>
+                  <td>{{ finding.found_by }}</td>
+                  <td>{{ finding.confidence }}%</td>
+                  <td>
+                    {% if finding.interesting_entries %}
+                      <ul class="list-group">
+                      {% for entry in finding.interesting_entries %}
+                        <li class="list-group-item">{{ entry }}</li>
+                      {% endfor %}
+                      </ul>
+                    {% else %}
+                      <p class="list-group-item">-</p>
+                    {% endif %}
+                  </td>
+                  <td><a href="{{ finding.url }}" target="_blank" rel="noopener noreferrer">{{ finding.url }}</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    {% if vulnerabilities %}
+      {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">
+              Vulnerabilidades de la versión de WordPress detectada - {{ vulnerabilities | length }}
+            </h4>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Título</th>
+                  <th>Corregida en</th>
+                  <th>CVE</th>
+                  <th>Referencias</th>
+                </tr>
+              </thead>
+              <tbody>
+                  {% for vuln in vulnerabilities %}
+                  <tr>
+                      <td>{{ vuln.title }}</td>
+                      <td>
+                          {% if vuln.fixed_in %}
+                              {{ vuln.fixed_in }}
+                          {% else %}
+                              <span class="badge bg-danger">Sin corregir</span>
+                          {% endif %}
+                      </td>
+                      <td>
+                          {% if vuln.references.cve %}
+                              {% for cve in vuln.references.cve %}
+                                  <span class="badge bg-secondary">{{ cve }}</span><br>
+                              {% endfor %}
+                          {% else %}
+                              <span class="text-muted">-</span>
+                          {% endif %}
+                      </td>
+                      <td>
+                          {% if vuln.references.url %}
+                              {% for url in vuln.references.url %}
+                                  <a href="{{ url }}" target="_blank" class="d-block text-truncate" style="max-width: 300px;">{{ url }}</a>
+                              {% endfor %}
+                          {% else %}
+                              <span class="text-muted">-</span>
+                          {% endif %}
+                      </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    {% if main_theme %}
+      {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">Tema Activo</h4>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Versión</th>
+                  <th>¿Está actualizado?</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ main_theme.style_name }}</td>
+                  <td>{{ main_theme.version.number or 'Desconocida' }}</td>
+                  <td>
+                    {% if not main_theme.outdated %}
+                      <span class="badge bg-success">Sí</span>
+                    {% else %}
+                      <span class="badge bg-danger">No</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <br>
+            {% if main_theme.vulnerabilities %}
+              <div class="p-4">
+                <h5 class="card-title">
+                  Vulnerabilidades del tema activo - {{ main_theme.vulnerabilities | length }}
+                </h5>
+                <table class="table table-bordered table-hover">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th>Título</th>
+                      <th>Corregida en</th>
+                      <th>CVE</th>
+                      <th>Referencias</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for vuln in main_theme.vulnerabilities %}
+                      <tr>
+                        <td>{{ vuln.title }}</td>
+                        <td>
+                          {% if vuln.fixed_in %}
+                            {{ vuln.fixed_in }}
+                          {% else %}
+                            <span class="badge bg-danger">Sin corregir</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if vuln.references.cve %}
+                            {% for cve in vuln.references.cve %}
+                              <span class="badge bg-secondary">{{ cve }}</span><br>
+                            {% endfor %}
+                          {% else %}
+                            <span class="text-muted">-</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if vuln.references.url %}
+                            {% for url in vuln.references.url %}
+                              <a href="{{ url }}" target="_blank" class="d-block text-truncate" style="max-width: 300px;">{{ url }}</a>
+                            {% endfor %}
+                          {% else %}
+                            <span class="text-muted">-</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+
+    {% if result.themes %}
+      {% if scan.scan_parameters.get('subtype') in ['full', 'themes', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">Temas Detectados</h4>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Versión</th>
+                  <th>¿Está actualizado?</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for theme_name, theme_data in result.themes.items() %}
+                  <tr>
+                    <td>{{ theme_name | capitalize or 'Desconocido' }}</td>
+                    <td>
+                      {% if main_theme and theme_name == main_theme.style_name %}
+                        {{ main_theme.version.number or 'Desconocida' }}
+                      {% else %}
+                        {{ theme_data.version.number or 'Desconocida' }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if main_theme and theme_name == main_theme.style_name %}
+                        {% if not main_theme.outdated %}
+                          <span class="badge bg-success">Sí</span>
+                        {% else %}
+                          <span class="badge bg-danger">No</span>
+                        {% endif %}
+                      {% else %}
+                        {% if not theme_data.outdated %}
+                          <span class="badge bg-success">Sí</span>
+                        {% else %}
+                          <span class="badge bg-danger">No</span>
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% if theme_data.vulnerabilities %}
+                    <tr>
+                      <td colspan="3">
+                        <div class="p-4">
+                          <h5 class="card-title">
+                            Vulnerabilidades de {{ theme_name }} – {{ theme_data.vulnerabilities | length }}
+                          </h5>
+                          <table class="table table-bordered table-hover">
+                            <thead class="thead-dark">
+                              <tr>
+                                <th>Título</th>
+                                <th>Corregida en</th>
+                                <th>CVE</th>
+                                <th>Referencias</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for vuln in theme_data.vulnerabilities %}
+                                <tr>
+                                  <td>{{ vuln.title }}</td>
+                                  <td>
+                                    {% if vuln.fixed_in %}
+                                      {{ vuln.fixed_in }}
+                                    {% else %}
+                                      <span class="badge bg-danger">Sin corregir</span>
+                                    {% endif %}
+                                  </td>
+                                  <td>
+                                    {% if vuln.references and vuln.references.cve %}
+                                      {% for cve in vuln.references.cve %}
+                                        <span class="badge bg-secondary">{{ cve }}</span><br>
+                                      {% endfor %}
+                                    {% else %}
+                                      <span class="text-muted">-</span>
+                                    {% endif %}
+                                  </td>
+                                  <td>
+                                    {% if vuln.references and vuln.references.url %}
+                                      {% for url in vuln.references.url %}
+                                        <a href="{{ url }}" target="_blank" class="d-block text-truncate" style="max-width: 300px;">{{ url }}</a>
+                                      {% endfor %}
+                                    {% else %}
+                                      <span class="text-muted">-</span>
+                                    {% endif %}
+                                  </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+      
+      
+    {% if result.plugins %}
+      {% if scan.scan_parameters.get('subtype') in ['basic', 'full', 'vulns', 'plugins', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">Plugins Detectados</h4>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Nombre</th>
+                  <th>Versión</th>
+                  <th>¿Está actualizado?</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for plugin_name, plugin_data in result.plugins.items() %}
+                  <tr>
+                    <td>{{ plugin_name | capitalize or 'Desconocido' }}</td>
+                    <td>{{ plugin_data.version.number or 'Desconocida' }}</td>
+                    <td>
+                      {% if not plugin_data.outdated %}
+                        <span class="badge bg-success">Sí</span>
+                      {% else %}
+                        <span class="badge bg-danger">No</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% if plugin_data.vulnerabilities %}
+                    <tr>
+                      <td colspan="3">
+                        <div class="p-4">
+                          <h5 class="card-title">
+                            Vulnerabilidades de {{ plugin_name }} – {{ plugin_data.vulnerabilities | length }}
+                          </h5>
+                          <table class="table table-bordered table-hover">
+                            <thead class="thead-dark">
+                              <tr>
+                                <th>Título</th>
+                                <th>Corregida en</th>
+                                <th>CVE</th>
+                                <th>Referencias</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for vuln in plugin_data.vulnerabilities %}
+                                <tr>
+                                  <td>{{ vuln.title }}</td>
+                                  <td>
+                                    {% if vuln.fixed_in %}
+                                      {{ vuln.fixed_in }}
+                                    {% else %}
+                                      <span class="badge bg-danger">Sin corregir</span>
+                                    {% endif %}
+                                  </td>
+                                  <td>
+                                    {% if vuln.references.cve %}
+                                      {% for cve in vuln.references.cve %}
+                                        <span class="badge bg-secondary">{{ cve }}</span><br>
+                                      {% endfor %}
+                                    {% else %}
+                                      <span class="text-muted">-</span>
+                                    {% endif %}
+                                  </td>
+                                  <td>
+                                    {% if vuln.references.url %}
+                                      {% for url in vuln.references.url %}
+                                        <a href="{{ url }}" target="_blank" class="d-block text-truncate" style="max-width: 300px;">{{ url }}</a>
+                                      {% endfor %}
+                                    {% else %}
+                                      <span class="text-muted">-</span>
+                                    {% endif %}
+                                  </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    {% if result.users %}
+      {% if scan.scan_parameters.get('subtype') in ['full', 'users', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">Usuarios Detectados</h4>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre de usuario</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for username, data in result.users.items() %}
+                  <tr>
+                    <td>
+                      {% if data.id is none %}
+                        Desconocido
+                      {% else %}
+                        {{ data.id }}
+                      {% endif %}
+                    </td>
+                    <td>{{ username }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
+
+    {% if result.config_backups %}
+      {% if scan.scan_parameters.get('subtype') in ['full', 'custom'] %}
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">Copias de Seguridad de Configuración Expuestas</h4>
+          </div>
+          <div class="card-body p-3">
+            <ul class="list-group">
+              {% for backup in result.config_backups %}
+                <li class="list-group-item">
+                  <a href="{{ backup }}" target="_blank">{{ backup }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}

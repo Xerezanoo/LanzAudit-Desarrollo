@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}LanzAudit | Estadísticas{% endblock %}
+{% block page_title %}Resultados y Estadísticas{% endblock %}
+{% block page_title_2 %}Resultados y Estadísticas{% endblock %}
+
+{% block content %}
+
+<!-- Resumen de Actividad -->
+<div class="col-md-12">
+  <div class="card mb-4">
+    <div class="card-header"><h4 class="card-title">Resumen de Actividad</h4></div>
+    <div class="card-body">
+      <div class="row text-center">
+        <div class="col-md-3 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <i class="bi bi-list-check fs-2 text-primary"></i>
+              <h5 class="mt-2">Total Escaneos</h5>
+              <p class="h4">{{ total_scans }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <i class="bi bi-check-circle fs-2 text-success"></i>
+              <h5 class="mt-2">Completados</h5>
+              <p class="h4">{{ completed_scans }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <i class="bi bi-x-circle fs-2 text-danger"></i>
+              <h5 class="mt-2">Fallidos</h5>
+              <p class="h4">{{ failed_scans }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <i class="bi bi-clock-history fs-2 text-warning"></i>
+              <h5 class="mt-2">Último Escaneo</h5>
+              <p class="h6">{{ last_scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Puertos más Encontrados -->
+<div class="col-md-12">
+  <div class="card mb-4">
+    <div class="card-header"><h4 class="card-title">Puertos Abiertos Más Encontrados</h4></div>
+    <div class="card-body">
+      <div class="row justify-content-center text-center">
+        {% for port in top_ports %}
+        <div class="col-md-2 mb-3">
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <i class="{{ PORT_ICONS.get(port.port, 'bi bi-hdd-network') }} fs-3 text-primary"></i>
+              <h6 class="mt-2">Puerto {{ port.port }} ({{ port.label }})</h6>
+              <p class="h5">{{ port.count }} veces</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Temas más encontrados WPScan -->
+<div class="col-md-12">
+  <div class="card mb-4">
+    <div class="card-header"><h4 class="card-title">Temas WordPress Más Encontrados y Con Más Vulnerabilidades</h4></div>
+    <div class="card-body">
+      <div class="row justify-content-center text-center mb-3">
+        {% for theme in top_themes %}
+        <div class="col-md-2 mb-3">
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <i class="bi bi-palette fs-3 text-success"></i>
+              <h6 class="mt-2">{{ theme.name }}</h6>
+              <p class="h5">{{ theme.count }} veces</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="height: 200px; position: relative;">
+        <canvas id="vulnThemesChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Plugins más encontrados WPScan -->
+<div class="col-md-12">
+  <div class="card mb-4">
+    <div class="card-header"><h4 class="card-title">Plugins WordPress Más Encontrados y Con Más Vulnerabilidades</h4></div>
+    <div class="card-body">
+      <div class="row justify-content-center text-center mb-3">
+        {% for plugin in top_plugins %}
+        <div class="col-md-2 mb-3">
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <i class="bi bi-puzzle fs-3 text-warning"></i>
+              <h6 class="mt-2">{{ plugin.name | capitalize }}</h6>
+              <p class="h5">{{ plugin.count }} veces</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="height: 200px; position: relative;">
+        <canvas id="vulnPluginsChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Escaneos Realizados -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3 class="card-title">Escaneos Realizados</h3>
+
+    <!-- Dropdown para seleccionar la ordenación -->
+    <form class="d-inline ms-auto" method="get" action="{{ url_for('stats') }}">
+      <div class="input-group">
+        <select class="form-select" name="sort" onchange="this.form.submit()">
+          <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>Fecha Descendente</option>
+          <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Fecha Ascendente</option>
+          <option value="type" {% if sort_by == 'type' %}selected{% endif %}>Tipo</option>
+          <option value="user" {% if sort_by == 'user' %}selected{% endif %}>Usuario</option>
+        </select>
+        <span class="input-group-text">
+          <i class="bi bi-sort-alpha-down"></i>
+        </span>
+      </div>
+    </form>
+
+  </div>
+  <div class="card-body">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="alert-container">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <table class="table table-bordered table-hover">
+      <thead class="thead-dark">
+        <tr>
+          <th>ID</th>
+          <th>IP/Host</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Realizado por</th>
+          <th>Fecha de Realización</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for scan in scans %}
+        <tr>
+          <td>{{ scan.id }}</td>
+          <td>{{ scan.scan_parameters.get('target', '—') }}</td>
+          <td>
+            {% set subtype = scan.scan_parameters.get('subtype') %}
+            {% if subtype == 'fast' %}
+              {{ scan.scan_type }} - Rápido
+            {% elif subtype == 'full' %}
+              {{ scan.scan_type }} - Completo
+            {% elif subtype == 'discovery' %}
+              {{ scan.scan_type }} - Descubrimiento de Hosts
+            {% elif subtype == 'versions' %}
+              {{ scan.scan_type }} - Versiones de Servicios
+            {% elif subtype == 'custom' %}
+              {{ scan.scan_type }} - Personalizado
+            {% elif subtype == 'basic' %}
+              {{ scan.scan_type }} - Básico
+            {% elif subtype == 'vulns' %}
+              {{ scan.scan_type }} - Vulnerabilidades
+            {% elif subtype == 'plugins' %}
+              {{ scan.scan_type }} - Plugins
+            {% elif subtype == 'themes' %}
+              {{ scan.scan_type }} - Temas
+            {% elif subtype == 'users' %}
+              {{ scan.scan_type }} - Usuarios
+            {% else %}
+              {{ scan.scan_type }}
+            {% endif %}
+          </td>
+          <td>
+            {% if scan.status == 'Completado' %}
+              <span class="badge bg-success">Completado</span>
+            {% elif scan.status == 'Fallido' %}
+              <span class="badge bg-danger">Fallido</span>
+            {% endif %}
+          </td>
+          <td>{{ scan.user.username }}</td>
+          <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>
+            {% if scan.scan_type == 'Nmap' %}
+            <a href="{{ url_for('nmapDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
+              <i class="bi bi-eye"></i>
+            </a>
+            {% elif scan.scan_type == 'WPScan' %}
+            <a href="{{ url_for('wpscanDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
+              <i class="bi bi-eye"></i>
+            </a>
+            {% endif %}
+
+
+            {% if current_user.role == 'Admin' or current_user.id == scan.user_id %}
+            <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#deleteModal{{ scan.id }}" title="Eliminar">
+              <i class="bi bi-trash"></i>
+            </button>
+            {% endif %}
+          </td>
+        </tr>
+
+        <!-- Modal Confirmación -->
+        <div class="modal fade" id="deleteModal{{ scan.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ scan.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel{{ scan.id }}">Confirmación de eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="modal-body">
+                ¿Estás seguro de que quieres eliminar el escaneo con ID {{ scan.id }}?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('deleteScan', scan_id=scan.id) }}">
+                  <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const scanTypeChart = new Chart(document.getElementById('scanTypeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Nmap', 'WPScan'],
+      datasets: [{
+        label: 'Tipo de Escaneo',
+        data: [{{ total_nmap }}, {{ total_wpscan }}],
+        backgroundColor: ['#0d6efd', '#6610f2']
+      }]
+    }
+  });
+
+  const scanStatusChart = new Chart(document.getElementById('scanStatusChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Completados', 'Fallidos'],
+      datasets: [{
+        label: 'Estado de Escaneos',
+        data: [{{ completed_scans }}, {{ failed_scans }}],
+        backgroundColor: ['#198754', '#dc3545']
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+
+<script>
+  const vulnThemesData = {
+    labels: {{ vulnerable_themes | map(attribute='name') | list | tojson }},
+    datasets: [{
+      label: 'Vulnerabilidades',
+      data: {{ vulnerable_themes | map(attribute='count') | list | tojson }},
+      backgroundColor: 'rgba(220, 53, 69, 0.7)',
+      maxBarThickness: 12
+    }]
+  };
+
+  new Chart(document.getElementById('vulnThemesChart'), {
+    type: 'bar',
+    data: vulnThemesData,
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      layout: { padding: { top: 0, bottom: 0 } },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { font: { size: 12 } } },
+        y: { ticks: { font: { size: 12 } } }
+      }
+    }
+  });
+</script>
+
+<script>
+  const vulnPluginsData = {
+    labels: {{ vulnerable_plugins | map(attribute='name') | list | tojson }},
+    datasets: [{
+      label: 'Vulnerabilidades',
+      data: {{ vulnerable_plugins | map(attribute='count') | list | tojson }},
+      backgroundColor: 'rgba(220, 53, 69, 0.7)',
+      maxBarThickness: 12
+    }]
+  };
+
+  new Chart(document.getElementById('vulnPluginsChart'), {
+    type: 'bar',
+    data: vulnPluginsData,
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      layout: { padding: { top: 0, bottom: 0 } },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { font: { size: 12 } } },
+        y: { ticks: { font: { size: 12 } } }
+      }
+    }
+  });
+</script>
+{% endblock %}

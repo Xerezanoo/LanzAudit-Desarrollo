@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Dashboard{% endblock %}
+{% block page_title %}Inicio - Dashboard{% endblock %}
+
+{% block content %}
+  <div class="app-content">
+    <div class="container-fluid">
+      <!--begin::Row de métricas-->
+      <div class="row">
+        <div class="col-lg-3 col-md-6">
+          <div class="card bg-primary text-white mb-4">
+            <div class="card-body">Total Escaneos: <strong>{{ total_scans }}</strong></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card bg-danger text-white mb-4">
+            <div class="card-body">Vulnerabilidades Detectadas: <strong>{{ total_vulns }}</strong></div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card bg-success text-white mb-4">
+            <div class="card-body">IP más escaneada: <strong>{{ most_scanned_target }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card bg-warning text-white mb-4">
+            <div class="card-body">Porcentaje de éxito: <strong>{{ completed_percentage }}%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--end::Row de métricas-->
+      <!--begin::Row de gráficos-->
+      <div class="row">
+        <div class="col-lg-7">
+          <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Escaneos por Tipo</h3></div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="scanTypeChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Actividad Reciente</h3></div>
+            <div class="card-body">
+              <ul class="list-group">
+                {% for activity_item in activity %}
+                  <li class="list-group-item">
+                    [{{ activity_item.date }}] Escaneo de {{ activity_item.type }} en {{ activity_item.target }} - 
+                    <span class="badge {% if activity_item.status == 'Completado' %}bg-success{% elif activity_item.status == 'Fallido' %}bg-danger{% else %}bg-warning{% endif %}">
+                      {{ activity_item.status }}
+                    </span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--end::Row de gráficos-->
+      <!--begin::Gráfico de evolución-->
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Escaneos Realizados por Día</h3></div>
+            <div class="card-body">
+              <canvas id="scansOverTimeChart" height="100"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--end::Gráfico de evolución-->
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <!--begin::Script para gráfico pastel -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      var ctx = document.getElementById('scanTypeChart').getContext('2d');
+      var scanTypeChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Nmap', 'WPScan'],
+          datasets: [{
+            data: [{{ nmap_scans }}, {{ wpscan_scans }}],
+            backgroundColor: ['#007bff', '#28a745']
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+          },
+        },
+      });
+    </script>
+    <!--end::Script para gráfico pastel-->
+    <!--begin::Script para gráfico línea -->
+    <script>
+      const dpi = window.devicePixelRatio;
+      const canvas = document.getElementById('scansOverTimeChart');
+      canvas.width = canvas.offsetWidth * dpi;
+      canvas.height = canvas.offsetHeight * dpi;
+      canvas.getContext('2d').scale(dpi, dpi);
+      var ctxTime = document.getElementById('scansOverTimeChart').getContext('2d');
+      var scansOverTimeChart = new Chart(ctxTime, {
+        type: 'line',
+        data: {
+          labels: {{ scan_dates | safe }},
+          datasets: [{
+            label: 'Escaneos por Día',
+            data: {{ scan_counts | safe }},
+            borderColor: '#007bff',
+            backgroundColor: '#cce5ff',
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              stepSize: 1
+            }
+          }
+        }
+      });
+    </script>
+    <!--end::Script para gráfico línea-->
+{% endblock %}

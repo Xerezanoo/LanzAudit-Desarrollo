@@ -1100,3 +1100,160 @@ Nos damos de alta en la página para generar nuestra API Key. Tenemos 25 peticio
 
 
 Para parsear el resultado de forma más bonita y fácil de leer, usamos la siguiente web: https://jsonformatter.org/json-parser
+
+
+
+---
+## Puesta en producción en local
+1. He dividido los proyectos para que no hayan conflictos.
+A LanzAudit, lo he llamado LanzAudit-Desarrollo (he tenido que eliminar el `.venv` y crear uno nuevo después). He creado otro directorio que es LanzAudit-Produccion donde voy a ponerlo en producción.
+
+También he modificado las bases de datos:
+He creado una que se llama LanzAuditDesarrolloDB a la que le he volcado todo el contenido de LanzAuditDB de la siguiente manera:
+	1. Hacemos una copia con:
+	```bash
+	mysqldump -u LanzAdmin -p LanzAuditDB > LanzAuditDesarrolloDB.sql
+	```
+	2. Creamos la base de datos nueva y le damos todos los permisos a LanzAdmin:
+	```mysql
+	CREATE DATABASE LanzAuditDesarrolloDB;
+
+	GRANT ALL PRIVILEGES ON LanzAuditDesarrolloDB.* TO 'LanzAdmin'@'localhost';
+
+	FLUSH PRIVILEGES;
+	```
+	3. Volcamos la copia en la nueva base de datos:
+	```bash
+	mysql -u LanzAdmin -p LanzAuditDesarrolloDB < LanzAuditDesarrolloDB.sql
+	```
+	4. Y en el `.env` del desarrollo, le ponemos en la URI de la base de datos el nombre correcto (LanzAuditDesarrolloDB)
+
+Luego he creado una nueva base de datos para la producción:
+```mysql
+CREATE DATABASE LanzAuditProduccionDB;
+
+GRANT ALL PRIVILEGES ON LanzAuditProduccionDB.* TO 'LanzAdmin'@'localhost';
+
+FLUSH PRIVILEGES;
+```
+
+Ponemos la URI de la base de datos en el `.env` de la producción también, creamos un `.venv`, lo activamos, instalamos las dependencias (`pip3 install -r requirements.txt`) y además instalamos los paquetes `wheel` y `gunicorn`:
+```bash
+pip3 install wheel gunicorn
+```
+
+Ahora inicializamos la base de datos con:
+```bash
+flask db init
+
+flask db migrate -m "Inicializando la base de datos"
+
+flask db upgrade
+```
+
+2. Ahora vamos a crear el punto de entrada `wsgi.py` con el siguiente contenido:
+```python
+from app import app
+
+if __name__ == "__main__":
+	app.run()
+```
+
+3. Eliminamos la siguiente parte del `app.py` en producción:
+```python
+if __name__ == "__main__":
+	app.run()
+```
+
+4. Y ya podemos probar que todo funciona haciendo:
+```bash
+gunicorn --bind 0.0.0.0:5000 wsgi:app
+```
+Entramos al navegador a http://127.0.0.1:5000
+
+5. Ahora, vamos a convertirlo en un servicio cuyo socket se ejecute en `/run/lanzauditproduccion`. Para ello:
+	1. Paramos Gunicorn para que no nos de error:
+	```bash
+	pkill gunicorn
+	```
+	2. Creamos el directorio donde va a ejecutarse el socket y le damos permisos únicamente a `jglanza` (mi usuario) y a `www-data` (el grupo de Nginx):
+	```bash
+	sudo mkdir /run/lanzauditproduccion
+
+	sudo chown jglanza:www-data /run/lanzauditproduccion
+
+	sudo chmod 770 /run/lanzauditproduccion
+	```
+	3. Creamos el archivo del servicio:
+	```bash
+	sudo nano /etc/systemd/system/lanzauditproduccion.service
+	```
+	4. Le añadimos el siguiente contenido:
+	```bash
+	[Unit]
+	Description=Instancia Gunicorn para servir LanzAudit en Producción en local
+	After=network.target
+
+	[Service]
+	User=jglanza
+	Group=www-data
+	WorkingDirectory=/home/jglanza/ProyectoASIR/LanzAudit-Desarrollo/LanzAudit-Produccion
+	Environment="PATH=/home/jglanza/ProyectoASIR/LanzAudit-Desarrollo/LanzAudit-Produccion/.venv/bin"
+	ExecStart=/home/jglanza/ProyectoASIR/LanzAudit-Desarrollo/LanzAudit-Produccion/.venv/bin/gunicorn --workers 4 --bind unix:/run/lanzauditproduccion/lanzauditproduccion.sock -m 007 wsgi:app
+
+	[Install]
+	WantedBy=multi-user.target
+	```
+	Sustituiremos ahí por nuestro usuario y grupo con el que se va a ejecutar la app, el directorio donde tenemos el proyecto, la ruta del entorno virtual y la ruta de Gunicorn (que estará en nuestro entorno virtual)
+	5. Recargamos los cambios:
+	```bash
+	sudo systemctl daemon-reload
+	```
+	6. Y ya podremos manejarlo como otro servicio cualquiera:
+	```bash
+	sudo systemctl start lanzauditproduccion
+
+	sudo systemctl enable lanzauditproduccion
+
+	sudo systemctl status lanzauditproduccion
+	```
+
+6. Y por último, vamos a instalar y configurar Nginx como proxy inverso:
+	1. Instalamos Nginx:
+	```bash
+	sudo apt install nginx -y
+	```
+	2. Creamos un nuevo bloque de configuración en Nginx para nuestro proyecto:
+	```bash
+	sudo nano /etc/nginx/sites-available/lanzauditproduccion
+	```
+	3. Le añadimos el siguiente contenido:
+	```
+	server {
+		listen 80;
+		server_name localhost 127.0.0.1;
+
+		location / {
+			include proxy_params;
+			proxy_pass http://unix:/run/lanzauditproduccion/lanzauditproduccion.sock:/;
+		}
+	}
+	```
+	4. Habilitamos el sitio:
+	```bash
+	sudo ln -s /etc/nginx/sites-available/lanzauditproduccion /etc/nginx/sites-enabled
+	```
+	5. Comprobamos si tenemos errores de sintaxis:
+	```bash
+	sudo nginx -t
+	```
+	6. Y reiniciamos todo:
+	```bash
+	sudo systemctl daemon-reload
+
+	sudo systemctl restart nginx
+
+	sudo systemctl restart lanzauditproduccion
+	```
+
+Y ya podremos acceder a http://localhost y podremos usar LanzAudit.

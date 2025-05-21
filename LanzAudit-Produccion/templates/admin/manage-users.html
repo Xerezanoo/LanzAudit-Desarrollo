@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Usuarios{% endblock %}
+{% block page_title %}Gestión de Usuarios{% endblock %}
+{% block page_title_2 %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title">Usuarios Registrados</h3>
+        <a href="{{ url_for('addUser') }}" class="btn btn-success btn-sm" style="margin-left:auto;">
+            <i class="bi bi-person-plus"></i> Añadir Usuario
+        </a>
+    </div>
+    <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="alert-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Recuperación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+                    <td class="text-center">
+                        {% if user.password_reset_requested %}
+                            <span class="badge bg-warning">Solicitada</span>
+                            {{ user.password_reset_requested_at.strftime('%d/%m/%Y %H:%M:%S') }}
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <!-- Botón de Editar con icono de lápiz -->
+                        <a href="{{ url_for('editUser', user_id=user.id) }}" class="btn btn-sm btn-link" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <!-- Botón de Eliminar con icono de papelera -->    
+                        {% if user.username != 'LanzAdmin' %}    
+                        <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ user.id }}" title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                        {% if user.password_reset_requested %}
+                        <!-- Botón para resolver la solicitud de recuperación de contraseña con icono de llave -->
+                        <a href="{{ url_for('resolveResetRequest', user_id=user.id) }}" class="btn btn-sm btn-warning" title="Resolver solicitud">
+                            <i class="bi bi-key"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirmación de eliminación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que quieres eliminar este usuario?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form id="deleteForm" method="POST" action="{{ url_for('deleteUser', user_id=0) }}">
+          <button type="submit" class="btn btn-danger">Eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const deleteButtons = document.querySelectorAll('[data-bs-toggle="modal"]');
+
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function () {
+        const userId = this.getAttribute('data-user-id');
+        const deleteForm = document.getElementById('deleteForm');
+        const actionUrl = deleteForm.getAttribute('action').replace('0', userId);
+        deleteForm.setAttribute('action', actionUrl);
+      });
+    });
+  });
+</script>
+{% endblock %}
