@@ -124,7 +124,7 @@
       </div>
     </div>
 
-    {% elif scan.scan_parameters.get('subtype') == 'full' %}
+    {% elif scan.scan_parameters.get('subtype') in ['full', 'custom'] %}
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Puertos encontrados</h3>
@@ -173,7 +173,7 @@
       </div>
     </div>
 
-    {% elif scan.scan_parameters.get('subtype') in ['versions', 'custom'] %}
+    {% elif scan.scan_parameters.get('subtype') in ['versions'] %}
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Puertos encontrados</h3>

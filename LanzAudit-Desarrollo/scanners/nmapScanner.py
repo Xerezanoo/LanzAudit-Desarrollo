@@ -15,7 +15,7 @@ def runNmapScan(target, scan_type, ports=None):
     elif scan_type == "discovery":
         nm.scan(hosts=target, arguments="-sn")
     elif scan_type == "custom" and ports:
-        nm.scan(hosts=target, ports=ports)
+        nm.scan(hosts=target, arguments="-sVC" , ports=ports)
     else:
         return {"error": "Tipo de escaneo inválido o puertos no especificados."}
     

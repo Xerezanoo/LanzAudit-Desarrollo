@@ -528,6 +528,9 @@ def WPScan():
             if result.get('not_fully_configured'):
                 raise ValueError("La web está en modo instalación de WordPress. No se puede escanear.")
             
+            if result.get('error'):
+                raise ValueError(result.get('error'))
+            
             # Crear escaneo
             new_scan = Scan(
                 user_id=current_user.id,

@@ -10,7 +10,7 @@ def runWPScan(target, subtype, options=None):
     if not WPSCAN_API_KEY:
         return {"error": "No se ha definido la API Key de WPScan."}
 
-    cmd = ["wpscan", "--url", target, "--api-token", WPSCAN_API_KEY, "--format", "json"]
+    cmd = ["/usr/local/bin/wpscan", "--url", target, "--api-token", WPSCAN_API_KEY, "--format", "json"]
 
     if subtype == "basic":
         pass
@@ -29,7 +29,7 @@ def runWPScan(target, subtype, options=None):
 
     try:
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        stdout, stderr = process.communicate(timeout=180)
+        stdout, stderr = process.communicate(timeout=300)
     
         try:
             return json.loads(stdout)
