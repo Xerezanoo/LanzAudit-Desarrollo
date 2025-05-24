@@ -213,22 +213,33 @@
           <td>{{ scan.user.username }}</td>
           <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
           <td>
-            {% if scan.scan_type == 'Nmap' %}
-            <a href="{{ url_for('nmapDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
-              <i class="bi bi-eye"></i>
-            </a>
-            {% elif scan.scan_type == 'WPScan' %}
-            <a href="{{ url_for('wpscanDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
-              <i class="bi bi-eye"></i>
-            </a>
-            {% endif %}
-
-
-            {% if current_user.role == 'Admin' or current_user.id == scan.user_id %}
-            <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#deleteModal{{ scan.id }}" title="Eliminar">
-              <i class="bi bi-trash"></i>
-            </button>
-            {% endif %}
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                {% if scan.scan_type == 'Nmap' %}
+                <a href="{{ url_for('nmapDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
+                  <i class="bi bi-eye"></i>
+                </a>
+                {% elif scan.scan_type == 'WPScan' %}
+                <a href="{{ url_for('wpscanDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
+                  <i class="bi bi-eye"></i>
+                </a>
+                {% endif %}
+              
+                {% if scan.status == 'Completado' %}
+                <a href="{{ url_for('aiReport', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Informe IA">
+                  <i class="bi bi-file-earmark-arrow-down"></i>
+                </a>
+                {% endif %}
+              </div>
+            
+              {% if current_user.role == 'Admin' or current_user.id == scan.user_id %}
+              <div>
+                <button type="button" class="btn btn-sm btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ scan.id }}" title="Eliminar">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+              {% endif %}
+            </div>
           </td>
         </tr>
 

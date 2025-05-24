@@ -2,7 +2,7 @@
 
 # Importación de las librerías y objetos necesarios
 import os
-from flask import render_template, redirect, url_for, flash, request, abort
+from flask import render_template, redirect, url_for, flash, request, abort, send_file, jsonify
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
@@ -18,6 +18,7 @@ from scanners.wpscanScanner import runWPScan
 from utils.stats import topOpenPorts, PORT_SERVICE_NAMES, PORT_ICONS, totalVulns, topThemes, topPlugins, vulnerablePlugins, vulnerableThemes
 from utils.ttl import detectOS
 from utils.emails import newRequest, resolvedRequest
+from utils.pdf import generateSummary, generatePDF
 
 # Rutas para el manejo de errores
 # Error 400 - Solicitud incorrecta
@@ -663,10 +664,36 @@ def wpscanDetail(scan_id):
     result = scan_result.result
     return render_template('scan/wpscan-detail.html', scan=scan, result=result)
 
+# Ruta para los informes generados por la IA
+@app.route('/ai-report/<int:scan_id>')
+@login_required
+def aiReport(scan_id):
+    try:
+        file = f"summary-{scan_id}.pdf"
+        report_path = os.path.join(os.getcwd(), "static", "reports", file)
+
+        if os.path.exists(report_path):
+            return send_file(report_path, as_attachment=True)
+
+        scan_result = ScanResults.query.filter_by(scan_id=scan_id).first()
+
+        if not scan_result or not scan_result.result:
+            return jsonify({'error': 'No se encontró el resultado del escaneo'}), 404
+        
+        result = scan_result.result
+
+        summary = generateSummary(result)
+        file = generatePDF(summary, scan_id)
+
+        return send_file(file, as_attachment=True)
+
+    except Exception as error:
+        return jsonify({'error': str(error)}), 500
+
 # Ruta para eliminar un escaneo
 @app.route('/stats/delete/<int:scan_id>', methods=['POST'])
 @login_required
-def deleteScan(scan_id):    
+def deleteScan(scan_id):
     scan = Scan.query.get_or_404(scan_id)
     
     if current_user.role != 'Admin' and scan.user_id != current_user.id:

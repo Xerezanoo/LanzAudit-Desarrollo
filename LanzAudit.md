@@ -1184,11 +1184,19 @@ Entramos al navegador a http://127.0.0.1:5000
 
 	sudo chmod 770 /run/lanzauditproduccion
 	```
-	3. Creamos el archivo del servicio:
+	3. Hacemos persistente el directorio en `/run`. Para ello, editamos este archivo:
+	```bash
+	sudo nano /etc/tmpfiles.d/lanzauditproduccion.conf
+	```
+	4. Le añadimos el siguiente contenido:
+	```bash
+	d /run/lanzauditproduccion 0770 jglanza www-data -
+	```
+	5. Creamos el archivo del servicio:
 	```bash
 	sudo nano /etc/systemd/system/lanzauditproduccion.service
 	```
-	4. Le añadimos el siguiente contenido:
+	6. Le añadimos el siguiente contenido:
 	```bash
 	[Unit]
 	Description=Instancia Gunicorn para servir LanzAudit en Producción en local
@@ -1199,17 +1207,17 @@ Entramos al navegador a http://127.0.0.1:5000
 	Group=www-data
 	WorkingDirectory=/home/jglanza/ProyectoASIR/LanzAudit-Desarrollo/LanzAudit-Produccion
 	Environment="PATH=/home/jglanza/ProyectoASIR/LanzAudit-Desarrollo/LanzAudit-Produccion/.venv/bin"
-	ExecStart=/home/jglanza/ProyectoASIR/LanzAudit-Desarrollo/LanzAudit-Produccion/.venv/bin/gunicorn --workers 4 --bind unix:/run/lanzauditproduccion/lanzauditproduccion.sock -m 007 wsgi:app
+	ExecStart=/home/jglanza/ProyectoASIR/LanzAudit-Desarrollo/LanzAudit-Produccion/.venv/bin/gunicorn --workers 4 --timeout 300 --bind unix:/run/lanzauditproduccion/lanzauditproduccion.sock -m 007 wsgi:app
 
 	[Install]
 	WantedBy=multi-user.target
 	```
 	Sustituiremos ahí por nuestro usuario y grupo con el que se va a ejecutar la app, el directorio donde tenemos el proyecto, la ruta del entorno virtual y la ruta de Gunicorn (que estará en nuestro entorno virtual)
-	5. Recargamos los cambios:
+	7. Recargamos los cambios:
 	```bash
 	sudo systemctl daemon-reload
 	```
-	6. Y ya podremos manejarlo como otro servicio cualquiera:
+	8. Y ya podremos manejarlo como otro servicio cualquiera:
 	```bash
 	sudo systemctl start lanzauditproduccion
 
@@ -1236,6 +1244,10 @@ Entramos al navegador a http://127.0.0.1:5000
 		location / {
 			include proxy_params;
 			proxy_pass http://unix:/run/lanzauditproduccion/lanzauditproduccion.sock:/;
+			proxy_read_timeout 300;
+            proxy_connect_timeout 300;
+            proxy_send_timeout 300;
+            send_timeout 300;
 		}
 	}
 	```
@@ -1256,4 +1268,90 @@ Entramos al navegador a http://127.0.0.1:5000
 	sudo systemctl restart lanzauditproduccion
 	```
 
+En el código del escaneo de WPScan, tenemos que cambiar un apartado para que sepa en qué ruta se encuentra WPScan, porque si no, no lo encuentra:
+```python
+import subprocess
+import os
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
+WPSCAN_API_KEY = os.getenv("WPSCAN_API_KEY")
+
+def runWPScan(target, subtype, options=None):
+    if not WPSCAN_API_KEY:
+        return {"error": "No se ha definido la API Key de WPScan."}
+
+    cmd = ["/usr/local/bin/wpscan", "--url", target, "--api-token", WPSCAN_API_KEY, "--format", "json"]
+
+    if subtype == "basic":
+        pass
+    elif subtype == "full":
+        cmd.extend(["--enumerate", "ap,at,cb,u", "--plugins-detection", "aggressive"])
+    elif subtype == "vulns":
+        cmd.extend(["--enumerate", "vp,vt"])
+    elif subtype == "plugins":
+        cmd.extend(["--enumerate", "ap", "--plugins-detection", "aggressive"])
+    elif subtype == "themes":
+        cmd.extend(["--enumerate", "at"])
+    elif subtype == "users":
+        cmd.extend(["--enumerate", "u"])
+    elif subtype == "custom" and options:
+        cmd.extend(options.strip().split())
+
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate(timeout=300)
+
+        try:
+            return json.loads(stdout)
+        except json.JSONDecodeError as e:
+            if "Scan Aborted:" in stdout:
+                return {
+                    "scan_aborted": stdout.strip()
+                }
+            return {
+                "error": "Error al parsear la salida JSON de WPScan.",
+                "exception": str(e),
+                "raw_output": stdout,
+                "stderr": stderr
+            }
+
+    except subprocess.TimeoutExpired:
+        return {"error": "El escaneo ha tardado demasiado y fue interrumpido."}
+    except Exception as error:
+        return {"error": f"Error inesperado al ejecutar WPScan: {str(error)}"}
+```
+
 Y ya podremos acceder a http://localhost y podremos usar LanzAudit.
+
+
+---
+## API IA Cohere
+Como extra, quiero añadir IA en mi Proyecto.
+He pensado 2 cosas:
+1. Pasarle a la IA los resultados de los escaneos y que te genere un breve documento con un resumen y recomendaciones sobre lo que se ha encontrado
+2. Un chat 24/7 para poder resolver cualquier duda al instante
+
+### 1. PDf con un reporte breve del resultado del escaneo
+Vamos a usar Cohere para ello. Vamos a darnos de alta en Cohere y a generar una API Key que nos va a permitir conectar la IA con nuestra app.
+
+Paso 1: Asegurar dependencias
+Desde tu entorno virtual .venv en LanzAudit-Desarrollo:
+```bash
+source .venv/bin/activate
+pip3 install cohere weasyprint
+```
+
+Y si estás en Ubuntu:
+```bash
+sudo apt install libpango-1.0-0 libcairo2 libgdk-pixbuf2.0-0 libffi-dev libxml2 libxslt1-dev
+```
+
+Paso 2: Añadir `.env` con clave de Cohere
+En LanzAudit-Desarrollo/.env:
+```bash
+COHERE_API_KEY=tu_api_key
+```
+
+Paso 3:
