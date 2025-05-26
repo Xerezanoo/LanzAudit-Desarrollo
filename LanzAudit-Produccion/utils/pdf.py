@@ -7,7 +7,7 @@ co = cohere.Client(os.getenv("COHERE_API_KEY"))
 
 def generateReport(result):
     prompt = f"""
-Genera un informe breve y en texto plano sobre el siguiente resultado de escaneo (puede ser Nmap o WPScan). No utilices caracteres especiales como almohadillas, asteriscos ni viñetas. Solo texto limpio y claro.
+Genera un informe breve y en texto plano sobre el siguiente resultado de escaneo (puede ser Nmap o WPScan). Es importante que no utilices caracteres especiales como almohadillas, asteriscos ni viñetas. Solo texto limpio y claro.
 
 Este informe está dirigido a un usuario sin conocimientos técnicos en Ciberseguridad, así que utiliza un lenguaje muy sencillo, directo y sin tecnicismos. Evita explicaciones largas o complicadas. Sé conciso y ve al grano.
 

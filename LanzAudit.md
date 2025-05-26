@@ -1329,11 +1329,8 @@ Y ya podremos acceder a http://localhost y podremos usar LanzAudit.
 ---
 ## API IA Cohere
 Como extra, quiero añadir IA en mi Proyecto.
-He pensado 2 cosas:
-1. Pasarle a la IA los resultados de los escaneos y que te genere un breve documento con un resumen y recomendaciones sobre lo que se ha encontrado
-2. Un chat 24/7 para poder resolver cualquier duda al instante
 
-### 1. PDf con un reporte breve del resultado del escaneo
+### PDF con un reporte breve del resultado del escaneo
 Vamos a usar Cohere para ello. Vamos a darnos de alta en Cohere y a generar una API Key que nos va a permitir conectar la IA con nuestra app.
 
 Paso 1: Asegurar dependencias
@@ -1354,4 +1351,145 @@ En LanzAudit-Desarrollo/.env:
 COHERE_API_KEY=tu_api_key
 ```
 
-Paso 3:
+Paso 3: Crear en `utils` un archivo llamado `pdf.py`:
+Aquí pondremos la API Key que hemos creado y crearemos las 2 funciones fundamentales para esto.
+La primera (`generateReport()`) es para generar el reporte, donde le indicaremos a la IA lo que tiene que hacer (el prompt) e indicaremos el modelo que vamos a usar, el prompt, los tokens máximos que vamos a gastar y la temperatura.
+La segunda (`generatePDF()`) es para generar el PDF con el reporte generado anteriormente. Le damos un nombre para que todos tengan el mismo (`report-{scan_id}`). Creamos un HTML con el estilo y la estructura que tendrá el documento:
+```python
+import cohere
+import os
+from datetime import datetime
+from weasyprint import HTML
+
+co = cohere.Client(os.getenv("COHERE_API_KEY"))
+
+def generateReport(result):
+    prompt = f"""
+Genera un informe breve y en texto plano sobre el siguiente resultado de escaneo (puede ser Nmap o WPScan). No utilices caracteres especiales como almohadillas, asteriscos ni viñetas. Solo texto limpio y claro.
+
+Este informe está dirigido a un usuario sin conocimientos técnicos en Ciberseguridad, así que utiliza un lenguaje muy sencillo, directo y sin tecnicismos. Evita explicaciones largas o complicadas. Sé conciso y ve al grano.
+
+Sigue esta estructura aproximada (adáptala según el contenido del escaneo):
+
+1. Breve resumen general del estado de seguridad
+2. Lista de vulnerabilidades encontradas (si las hay)
+3. Usuarios detectados (si los hay)
+4. Plugins o temas problemáticos (solo si es WordPress)
+5. Recomendaciones básicas que el usuario pueda aplicar
+
+A continuación te proporciono los datos del escaneo en formato JSON:
+{result}
+"""
+
+    response = co.generate(
+        model='command-r-plus',
+        prompt=prompt,
+        max_tokens=800,
+        temperature=0.7
+    )
+
+    return response.generations[0].text.strip()
+
+def generatePDF(report, scan_id=None):
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M')
+    file = f"report-{scan_id or timestamp}.pdf"
+
+    base_path = os.path.join(os.getcwd(), "static", "reports")
+    os.makedirs(base_path, exist_ok=True)
+    full_path = os.path.join(base_path, file)
+
+    if os.path.exists(full_path):
+        return full_path
+
+    html = f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            @page {{
+                size: A4;
+                margin: 25mm 20mm 25mm 20mm;
+            }}
+            body {{
+                font-family: 'Source Sans 3', sans-serif;
+                font-size: 12pt;
+                color: #222;
+                line-height: 1.5;
+            }}
+            h2 {{
+                color: #005a9c;
+                font-size: 20pt;
+                margin-bottom: 10px;
+            }}
+            img.logo {{
+                width: 160px;
+                margin-bottom: 20px;
+            }}
+            .summary {{
+                background-color: #f9f9f9;
+                padding: 20px;
+                border-left: 4px solid #005a9c;
+                border-radius: 4px;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }}
+            .footer {{
+                font-size: 10pt;
+                color: #666;
+                margin-top: 30px;
+                border-top: 1px solid #ccc;
+                padding-top: 10px;
+            }}
+        </style>
+    </head>
+    <body>
+        <img src="file://{os.getcwd()}/static/assets/LanzAuditLogo-Negro.png" class="logo" />
+        <h2>Informe del Escaneo {scan_id}</h2>
+        <div class="summary">
+            {report}
+        </div>
+        <div class="footer">
+            Reporte generado con IA automáticamente el {datetime.now().strftime('%d/%m/%Y a las %H:%M')}  -  LanzAudit
+        </div>
+    </body>
+    </html>
+    """
+    HTML(string=html).write_pdf(full_path)
+    return full_path
+
+```
+
+Paso 4: Añadir endpoint a `routes.py`.
+La ruta es `ai-report/{scan_id}` y primero busca si ya existe un reporte generado de ese escaneo (para que no vuelva a generar otro) y luego, si no lo encuentra, llama a las 2 funciones anteriores para generarlo.
+
+```python
+# Ruta para los informes generados por la IA
+@app.route('/ai-report/<int:scan_id>')
+@login_required
+def aiReport(scan_id):
+    try:
+        file = f"report-{scan_id}.pdf"
+        report_path = os.path.join(os.getcwd(), "static", "reports", file)
+
+        if os.path.exists(report_path):
+            return send_file(report_path, as_attachment=True)
+
+        scan_result = ScanResults.query.filter_by(scan_id=scan_id).first()
+
+        if not scan_result or not scan_result.result:
+            return jsonify({'error': 'No se encontró el resultado del escaneo'}), 404
+
+        result = scan_result.result
+
+        report = generateReport(result)
+        file = generatePDF(report, scan_id)
+
+        return send_file(file, as_attachment=True)
+
+    except Exception as error:
+        return jsonify({'error': str(error)}), 500
+```
+
+---
+## Dockerizar la app
+

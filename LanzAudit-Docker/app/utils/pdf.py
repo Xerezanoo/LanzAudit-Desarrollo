@@ -1,13 +1,14 @@
 import cohere
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from weasyprint import HTML
 
 co = cohere.Client(os.getenv("COHERE_API_KEY"))
 
 def generateReport(result):
     prompt = f"""
-Genera un informe breve y en texto plano sobre el siguiente resultado de escaneo (puede ser Nmap o WPScan). No utilices caracteres especiales como almohadillas, asteriscos ni viñetas. Solo texto limpio y claro.
+Genera un informe breve y en texto plano sobre el siguiente resultado de escaneo (puede ser Nmap o WPScan). Es importante que no utilices caracteres especiales como almohadillas, asteriscos ni viñetas. Solo texto limpio y claro.
 
 Este informe está dirigido a un usuario sin conocimientos técnicos en Ciberseguridad, así que utiliza un lenguaje muy sencillo, directo y sin tecnicismos. Evita explicaciones largas o complicadas. Sé conciso y ve al grano.
 
@@ -33,7 +34,7 @@ A continuación te proporciono los datos del escaneo en formato JSON:
     return response.generations[0].text.strip()
 
 def generatePDF(report, scan_id=None):
-    timestamp = datetime.now().strftime('%Y%m%d-%H%M')
+    timestamp = datetime.now(ZoneInfo("Europe/Madrid")).strftime('%Y%m%d-%H%M')
     file = f"report-{scan_id or timestamp}.pdf"
 
     base_path = os.path.join(os.getcwd(), "static", "reports")
@@ -98,7 +99,7 @@ def generatePDF(report, scan_id=None):
             {report}
         </div>
         <div class="footer">
-            Reporte generado con IA automáticamente el {datetime.now().strftime('%d/%m/%Y a las %H:%M')} - LanzAudit
+            Reporte generado con IA automáticamente el {datetime.now(ZoneInfo("Europe/Madrid")).strftime('%d/%m/%Y a las %H:%M')} - LanzAudit
         </div>
     </body>
     </html>

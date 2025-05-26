@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Editar Usuario{% endblock %}
+{% block page_title %}Editar Usuario{% endblock %}
+{% block page_title_2 %}Editar Usuario{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="alert-container">
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+        <form action="{{ url_for('editUser', user_id=user.id) }}" method="POST" novalidate class="needs-validation">
+            <div class="input-group mb-3">
+                <input type="text" name="username" class="form-control" placeholder="Nombre de usuario" value="{{ user.username }}" {% if user.username == 'LanzAdmin' %}disabled{% endif %} required>
+                <div class="input-group-text"><span class="bi bi-person"></span></div>
+                <div class="invalid-feedback">Por favor, introduce un nombre de usuario.</div>
+            </div>
+
+            <div class="input-group mb-3">
+                <input type="email" name="email" class="form-control" placeholder="Correo electrónico" value="{{ user.email }}" required>
+                <div class="input-group-text"><span class="bi bi-envelope"></span></div>
+                <div class="invalid-feedback">Por favor, introduce un correo electrónico válido.</div>
+            </div>
+
+            <div class="input-group mb-3">
+                <input type="password" name="password" class="form-control" placeholder="Contraseña (Deja en blanco si no deseas cambiarla)">
+                <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
+                <div class="invalid-feedback">Por favor, introduce una contraseña.</div>
+            </div>
+
+            <div class="input-group mb-3">
+                <select name="role" class="form-control" {% if user.username == 'LanzAdmin' %}disabled{% endif %} required>
+                    <option value="{{ user.role }}" selected>{{ user.role }}</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Worker">Worker</option>
+                    <option value="Analyst">Analyst</option>
+                </select>
+                <div class="input-group-text"><span class="bi bi-person-fill"></span></div>
+                <div class="invalid-feedback">Por favor, selecciona un rol.</div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary" id="submit-btn">
+                Actualizar Usuario
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
+            </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- begin::Script Validación y Spinner botón -->
+<script>
+  (() => {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        'submit',
+        (event) => {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          } else {
+            const submitButton = document.getElementById('submit-btn');
+            const spinner = document.getElementById('spinner');
+            submitButton.disabled = true;
+            spinner.classList.remove('d-none');
+          }
+          form.classList.add('was-validated');
+        },
+        false,
+      );
+    });
+  })();
+</script>
+<!-- end::Script Validación -->
+{% endblock %}

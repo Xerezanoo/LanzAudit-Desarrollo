@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}LanzAudit | Perfil{% endblock %}
+{% block extra_link %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>{% endblock %}
+{% block page_title %}Perfil{% endblock %}
+{% block page_title_2 %}Perfil{% endblock %}
+
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="alert-container">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card card-primary card-outline">
+          <div class="card-body">
+            <div class="text-center mb-3">
+              <img src="{{ image_url }}" class="img-circle elevation-2" alt="Foto de perfil" width="120">
+            </div>
+            <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data" novalidate class="needs-validation">
+              <div class="form-group">
+                <label for="username">Nombre de usuario</label>
+                {% if current_user.username == 'LanzAdmin' %}
+                  <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" disabled>
+                {% else %}
+                  <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" required>
+                  <div class="invalid-feedback">Por favor, introduce un nombre de usuario.</div>
+                {% endif %}
+              </div>
+              <div class="form-group mt-3">
+                <label for="email">Correo electrónico</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
+                <div class="invalid-feedback">Por favor, introduce un correo electrónico válido.</div>
+              </div>
+              <div class="form-group mt-3">
+                <label for="imageInput" class="mb-2 d-block">Foto de perfil</label>
+                <input type="file" class="form-control-file" id="imageInput" accept="image/*">
+                <div class="mt-3 text-center">
+                  <img id="imagePreview" style="max-width: 100%; display: none;" />
+                </div>
+                <canvas id="croppedCanvas" style="display: none;"></canvas>
+                <input type="hidden" name="cropped_image" id="croppedImageData">
+              </div>
+              <div class="d-grid gap-2 mt-3">
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                  Guardar cambios
+                  <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
+                </button>
+              </div>
+            </form>
+            <div class="mt-3">
+            {% if current_user.profile_picture != None %}
+            <form action="{{ url_for('removeProfilePicture') }}" method="POST" class="text-center mb-3">
+              <button type="submit" class="btn btn-danger">Eliminar foto de perfil</button>
+            </form>
+            {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<!--Script Validación y Spinner botón -->
+<script>
+  (() => {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        'submit',
+        (event) => {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          } else {
+            const submitButton = document.getElementById('submit-btn');
+            const spinner = document.getElementById('spinner');
+            submitButton.disabled = true;
+            spinner.classList.remove('d-none');
+          }
+          form.classList.add('was-validated');
+        },
+        false,
+      );
+    });
+  })();
+</script>
+<!-- Cropper.js JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<!-- Script Cropper -->
+<script>
+  let cropper;
+  const imageInput = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const croppedImageData = document.getElementById('croppedImageData');
+
+  imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      imagePreview.src = event.target.result;
+      imagePreview.style.display = 'block';
+
+      if (cropper) cropper.destroy();
+
+      cropper = new Cropper(imagePreview, {
+        aspectRatio: 1,
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 1,
+        minCropBoxWidth: 128,
+        minCropBoxHeight: 128,
+        ready() {
+          document.querySelector('form').addEventListener('submit', function () {
+            if (cropper) {
+              const canvas = cropper.getCroppedCanvas({ width: 128, height: 128 });
+              croppedImageData.value = canvas.toDataURL('image/png');
+            }
+          });
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+
+{% endblock %}

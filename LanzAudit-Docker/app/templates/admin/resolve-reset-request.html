@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}LanzAudit | Resolver solicitud{% endblock %}
+{% block page_title %}Resolver Solicitud de Recuperación de Contraseña{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Cambiar Contraseña de <strong>{{ user.username }}</strong></h3>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('resolveResetRequest', user_id=user.id) }}" method="POST" novalidate class="needs-validation">
+            <div class="input-group mb-3">
+                <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Contraseña" required/>
+                <div class="input-group-text"><span class="bi bi-lock-fill"></span></div>
+                <div class="invalid-feedback">Por favor, introduce una contraseña.</div>
+              </div>
+              <button type="submit" class="btn btn-primary" id="submit-btn">
+                Actualizar contraseña
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="spinner"></span>
+              </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <!-- begin::Script Validación y Spinner botón -->
+    <script>
+      (() => {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach((form) => {
+          form.addEventListener(
+            'submit',
+            (event) => {
+              if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+              } else {
+                const submitButton = document.getElementById('submit-btn');
+                const spinner = document.getElementById('spinner');
+                submitButton.disabled = true;
+                spinner.classList.remove('d-none');
+              }
+              form.classList.add('was-validated');
+            },
+            false,
+          );
+        });
+      })();
+    </script>
+    <!-- end::Script Validación y Spinner botón -->
+{% endblock %}

@@ -18,7 +18,7 @@ from scanners.wpscanScanner import runWPScan
 from utils.stats import topOpenPorts, PORT_SERVICE_NAMES, PORT_ICONS, totalVulns, topThemes, topPlugins, vulnerablePlugins, vulnerableThemes
 from utils.ttl import detectOS
 from utils.emails import newRequest, resolvedRequest
-from utils.pdf import generateSummary, generatePDF
+from utils.pdf import generateReport, generatePDF
 
 # Rutas para el manejo de errores
 # Error 400 - Solicitud incorrecta
@@ -669,7 +669,7 @@ def wpscanDetail(scan_id):
 @login_required
 def aiReport(scan_id):
     try:
-        file = f"summary-{scan_id}.pdf"
+        file = f"report-{scan_id}.pdf"
         report_path = os.path.join(os.getcwd(), "static", "reports", file)
 
         if os.path.exists(report_path):
@@ -682,8 +682,8 @@ def aiReport(scan_id):
         
         result = scan_result.result
 
-        summary = generateSummary(result)
-        file = generatePDF(summary, scan_id)
+        report = generateReport(result)
+        file = generatePDF(report, scan_id)
 
         return send_file(file, as_attachment=True)
 
