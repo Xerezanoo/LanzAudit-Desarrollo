@@ -164,112 +164,120 @@
     {% endif %}
     {% endwith %}
 
-    <table class="table table-bordered table-hover">
-      <thead class="thead-dark">
-        <tr>
-          <th>ID</th>
-          <th>IP/Host</th>
-          <th>Tipo</th>
-          <th>Estado</th>
-          <th>Realizado por</th>
-          <th>Fecha de Realización</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for scan in scans %}
-        <tr>
-          <td>{{ scan.id }}</td>
-          <td>{{ scan.scan_parameters.get('target', '—') }}</td>
-          <td>
-            {% set subtype = scan.scan_parameters.get('subtype') %}
-            {% if subtype == 'fast' %}
-              {{ scan.scan_type }} - Rápido
-            {% elif subtype == 'full' %}
-              {{ scan.scan_type }} - Completo
-            {% elif subtype == 'discovery' %}
-              {{ scan.scan_type }} - Descubrimiento de Hosts
-            {% elif subtype == 'versions' %}
-              {{ scan.scan_type }} - Versiones de Servicios
-            {% elif subtype == 'custom' %}
-              {{ scan.scan_type }} - Personalizado
-            {% elif subtype == 'basic' %}
-              {{ scan.scan_type }} - Básico
-            {% elif subtype == 'vulns' %}
-              {{ scan.scan_type }} - Vulnerabilidades
-            {% elif subtype == 'plugins' %}
-              {{ scan.scan_type }} - Plugins
-            {% elif subtype == 'themes' %}
-              {{ scan.scan_type }} - Temas
-            {% elif subtype == 'users' %}
-              {{ scan.scan_type }} - Usuarios
-            {% else %}
-              {{ scan.scan_type }}
-            {% endif %}
-          </td>
-          <td>
-            {% if scan.status == 'Completado' %}
-              <span class="badge bg-success">Completado</span>
-            {% elif scan.status == 'Fallido' %}
-              <span class="badge bg-danger">Fallido</span>
-            {% endif %}
-          </td>
-          <td>{{ scan.user.username }}</td>
-          <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-          <td>
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                {% if scan.scan_type == 'Nmap' %}
-                <a href="{{ url_for('nmapDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
-                  <i class="bi bi-eye"></i>
-                </a>
-                {% elif scan.scan_type == 'WPScan' %}
-                <a href="{{ url_for('wpscanDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
-                  <i class="bi bi-eye"></i>
-                </a>
-                {% endif %}
-              
-                {% if scan.status == 'Completado' %}
-                <a href="{{ url_for('aiReport', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Informe IA">
-                  <i class="bi bi-file-earmark-arrow-down"></i>
-                </a>
-                {% endif %}
-              </div>
-            
-              {% if current_user.role == 'Admin' or current_user.id == scan.user_id %}
-              <div>
-                <button type="button" class="btn btn-sm btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ scan.id }}" title="Eliminar">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th>ID</th>
+            <th>IP/Host</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Realizado por</th>
+            <th>Fecha de Realización</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for scan in scans %}
+          <tr>
+            <td>{{ scan.id }}</td>
+            <td>{{ scan.scan_parameters.get('target', '—') }}</td>
+            <td>
+              {% set subtype = scan.scan_parameters.get('subtype') %}
+              {% if subtype == 'fast' %}
+                {{ scan.scan_type }} - Rápido
+              {% elif subtype == 'full' %}
+                {{ scan.scan_type }} - Completo
+              {% elif subtype == 'discovery' %}
+                {{ scan.scan_type }} - Descubrimiento de Hosts
+              {% elif subtype == 'versions' %}
+                {{ scan.scan_type }} - Versiones de Servicios
+              {% elif subtype == 'custom' %}
+                {{ scan.scan_type }} - Personalizado
+              {% elif subtype == 'basic' %}
+                {{ scan.scan_type }} - Básico
+              {% elif subtype == 'vulns' %}
+                {{ scan.scan_type }} - Vulnerabilidades
+              {% elif subtype == 'plugins' %}
+                {{ scan.scan_type }} - Plugins
+              {% elif subtype == 'themes' %}
+                {{ scan.scan_type }} - Temas
+              {% elif subtype == 'users' %}
+                {{ scan.scan_type }} - Usuarios
+              {% else %}
+                {{ scan.scan_type }}
               {% endif %}
-            </div>
-          </td>
-        </tr>
+            </td>
+            <td>
+              {% if scan.status == 'Completado' %}
+                <span class="badge bg-success">Completado</span>
+              {% elif scan.status == 'Fallido' %}
+                <span class="badge bg-danger">Fallido</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if scan.user %}
+                {{ scan.user.username }}
+              {% else %}
+                <span class="text-muted">Usuario desconocido</span>
+              {% endif %}
+            </td>
+            <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  {% if scan.scan_type == 'Nmap' %}
+                  <a href="{{ url_for('nmapDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  {% elif scan.scan_type == 'WPScan' %}
+                  <a href="{{ url_for('wpscanDetail', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Ver Detalles">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  {% endif %}
+                
+                  {% if scan.status == 'Completado' %}
+                  <a href="{{ url_for('aiReport', scan_id=scan.id) }}" class="btn btn-sm btn-link" title="Informe IA">
+                    <i class="bi bi-file-earmark-arrow-down"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              
+                {% if current_user.role == 'Admin' or current_user.id == scan.user_id %}
+                <div>
+                  <button type="button" class="btn btn-sm btn-link text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ scan.id }}" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
 
-        <!-- Modal Confirmación -->
-        <div class="modal fade" id="deleteModal{{ scan.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ scan.id }}" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel{{ scan.id }}">Confirmación de eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-              </div>
-              <div class="modal-body">
-                ¿Estás seguro de que quieres eliminar el escaneo con ID {{ scan.id }}?
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form method="POST" action="{{ url_for('deleteScan', scan_id=scan.id) }}">
-                  <button type="submit" class="btn btn-danger">Eliminar</button>
-                </form>
+          <!-- Modal Confirmación -->
+          <div class="modal fade" id="deleteModal{{ scan.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ scan.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="deleteModalLabel{{ scan.id }}">Confirmación de eliminación</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                  ¿Estás seguro de que quieres eliminar el escaneo con ID {{ scan.id }}?
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  <form method="POST" action="{{ url_for('deleteScan', scan_id=scan.id) }}">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {% endfor %}
-      </tbody>
-    </table>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 

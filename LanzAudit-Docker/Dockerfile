@@ -29,7 +29,7 @@ WORKDIR /app
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el código de la app
+# Copiar el código de la app y los estáticos base
 COPY app/ .
 
 # Copiar entrypoint y wait-for-it

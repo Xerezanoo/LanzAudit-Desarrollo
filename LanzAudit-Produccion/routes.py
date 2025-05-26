@@ -2,7 +2,7 @@
 
 # Importación de las librerías y objetos necesarios
 import os
-from flask import render_template, redirect, url_for, flash, request, abort, send_file, jsonify
+from flask import render_template, redirect, url_for, flash, request, abort, send_file, jsonify, send_from_directory, current_app
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
@@ -60,6 +60,11 @@ def badGateway(error):
 @app.errorhandler(503)
 def serviceUnavailable(error):
     return render_template('error/503.html'), 503
+
+# Endpoint para recoger las fotos de perfil subidas por los usuarios
+@app.route('/profile_pics/<path:filename>')
+def profile_pics(filename):
+    return send_from_directory(current_app.root_path + '/profile_pics', filename)
 
 
 # Ruta para la página de inicio de sesión, la 1º que se mostrará al entrar a la app. Si no existe el usuario LanzAdmin, se redigirá a la página de configuración inicial del mismo
@@ -402,9 +407,9 @@ def profile():
         return redirect(url_for('profile'))
 
     if user.profile_picture:
-        image_url = url_for('static', filename='profile_pics/' + user.profile_picture)
+        image_url = url_for('profile_pics', filename=user.profile_picture)
     else:
-        image_url = url_for('static', filename='profile_pics/default.png')
+        image_url = url_for('profile_pics', filename='default.png')
 
     return render_template('profile.html', image_url=image_url)
 
@@ -673,7 +678,7 @@ def wpscanDetail(scan_id):
 def aiReport(scan_id):
     try:
         file = f"report-{scan_id}.pdf"
-        report_path = os.path.join(os.getcwd(), "static", "reports", file)
+        report_path = os.path.join(os.getcwd(), "reports", file)
 
         if os.path.exists(report_path):
             return send_file(report_path, as_attachment=True)

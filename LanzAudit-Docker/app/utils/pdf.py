@@ -37,7 +37,7 @@ def generatePDF(report, scan_id=None):
     timestamp = datetime.now(ZoneInfo("Europe/Madrid")).strftime('%Y%m%d-%H%M')
     file = f"report-{scan_id or timestamp}.pdf"
 
-    base_path = os.path.join(os.getcwd(), "static", "reports")
+    base_path = os.path.join(os.getcwd(), "reports")
     os.makedirs(base_path, exist_ok=True)
     full_path = os.path.join(base_path, file)
 

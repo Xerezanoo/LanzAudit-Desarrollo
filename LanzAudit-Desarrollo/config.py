@@ -18,4 +18,4 @@ class Config:
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')  # Correo (para autenticarme)
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')  # Contraseña de la cuenta
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')  # El remitente desde donde se enviarán los mensajes (puede ser el mismo que MAIL_USERNAME o distinto)
-    UPLOAD_FOLDER = os.path.join('static', 'profile_pics')
+    UPLOAD_FOLDER = os.path.join('profile_pics')

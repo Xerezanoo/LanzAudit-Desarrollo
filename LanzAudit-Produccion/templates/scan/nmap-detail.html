@@ -91,36 +91,38 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Puertos encontrados</h3>
       </div>
-      <div class="card-body">  
-        <table class="table table-bordered table-hover">
-          <thead class="thead-dark">
-            <tr>
-              <th>Puerto</th>
-              <th>Servicio</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for port, port_data in host_data.get('tcp', {}).items() %}
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
               <tr>
-                <td>{{ port }}</td>
-                <td>{{ port_data.get('name', 'No disponible')|upper }}</td>
-                <td>
-                  <span class="badge 
-                  {% if port_data.get('state') == 'open' %}
-                    bg-success
-                  {% elif port_data.get('state') == 'filtered' %}
-                    bg-warning text-dark
-                  {% elif port_data.get('state') == 'closed' %}
-                    bg-danger
-                  {% else %}
-                    bg-secondary
-                  {% endif %}">
-                  {{ estadosPuertos.get(port_data.get('state'), 'No disponible') }}</td>
+                <th>Puerto</th>
+                <th>Servicio</th>
+                <th>Estado</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for port, port_data in host_data.get('tcp', {}).items() %}
+                <tr>
+                  <td>{{ port }}</td>
+                  <td>{{ port_data.get('name', 'No disponible')|upper }}</td>
+                  <td>
+                    <span class="badge 
+                    {% if port_data.get('state') == 'open' %}
+                      bg-success
+                    {% elif port_data.get('state') == 'filtered' %}
+                      bg-warning text-dark
+                    {% elif port_data.get('state') == 'closed' %}
+                      bg-danger
+                    {% else %}
+                      bg-secondary
+                    {% endif %}">
+                    {{ estadosPuertos.get(port_data.get('state'), 'No disponible') }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -129,47 +131,49 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Puertos encontrados</h3>
       </div>
-      <div class="card-body">  
-        <table class="table table-bordered table-hover">
-          <thead class="thead-dark">
-            <tr>
-              <th>Puerto</th>
-              <th>Servicio</th>
-              <th>Aplicación</th>
-              <th>Versión</th>
-              <th>Estado</th>
-              <th>Información adicional</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for port, port_data in host_data.get('tcp', {}).items() %}
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
               <tr>
-                <td>{{ port }}</td>
-                <td>{{ port_data.get('name', 'No disponible')|upper }}</td>
-                <td>{{ port_data.get('product', 'No disponible') }}</td>
-                <td>{{ port_data.get('version', 'No disponible') }}</td>
-                <td>
-                  <span class="badge 
-                  {% if port_data.get('state') == 'open' %}
-                    bg-success
-                  {% elif port_data.get('state') == 'filtered' %}
-                    bg-warning text-dark
-                  {% elif port_data.get('state') == 'closed' %}
-                    bg-danger
-                  {% else %}
-                    bg-secondary
-                  {% endif %}">
-                  {{ estadosPuertos.get(port_data.get('state'), 'No disponible') }}</td>
-                <td>
-                  {% for script, script_result in port_data.get('script', {}).items() %}
-                    <strong>{{ script }}:</strong><br>
-                    <code>{{ script_result }}</code><br><br>
-                  {% endfor %}
-                </td>
+                <th>Puerto</th>
+                <th>Servicio</th>
+                <th>Aplicación</th>
+                <th>Versión</th>
+                <th>Estado</th>
+                <th>Información adicional</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for port, port_data in host_data.get('tcp', {}).items() %}
+                <tr>
+                  <td>{{ port }}</td>
+                  <td>{{ port_data.get('name', 'No disponible')|upper }}</td>
+                  <td>{{ port_data.get('product', 'No disponible') }}</td>
+                  <td>{{ port_data.get('version', 'No disponible') }}</td>
+                  <td>
+                    <span class="badge 
+                    {% if port_data.get('state') == 'open' %}
+                      bg-success
+                    {% elif port_data.get('state') == 'filtered' %}
+                      bg-warning text-dark
+                    {% elif port_data.get('state') == 'closed' %}
+                      bg-danger
+                    {% else %}
+                      bg-secondary
+                    {% endif %}">
+                    {{ estadosPuertos.get(port_data.get('state'), 'No disponible') }}</td>
+                  <td>
+                    {% for script, script_result in port_data.get('script', {}).items() %}
+                      <strong>{{ script }}:</strong><br>
+                      <code>{{ script_result }}</code><br><br>
+                    {% endfor %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -178,40 +182,42 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Puertos encontrados</h3>
       </div>
-      <div class="card-body">  
-        <table class="table table-bordered table-hover">
-          <thead class="thead-dark">
-            <tr>
-              <th>Puerto</th>
-              <th>Servicio</th>
-              <th>Aplicación</th>
-              <th>Versión</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for port, port_data in host_data.get('tcp', {}).items() %}
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
               <tr>
-                <td>{{ port }}</td>
-                <td>{{ port_data.get('name', 'No disponible')|upper }}</td>
-                <td>{{ port_data.get('product', 'No disponible') }}</td>
-                <td>{{ port_data.get('version', 'No disponible') }}</td>
-                <td>
-                  <span class="badge 
-                  {% if port_data.get('state') == 'open' %}
-                    bg-success
-                  {% elif port_data.get('state') == 'filtered' %}
-                    bg-warning text-dark
-                  {% elif port_data.get('state') == 'closed' %}
-                    bg-danger
-                  {% else %}
-                    bg-secondary
-                  {% endif %}">
-                  {{ estadosPuertos.get(port_data.get('state'), 'No disponible') }}</td>
+                <th>Puerto</th>
+                <th>Servicio</th>
+                <th>Aplicación</th>
+                <th>Versión</th>
+                <th>Estado</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for port, port_data in host_data.get('tcp', {}).items() %}
+                <tr>
+                  <td>{{ port }}</td>
+                  <td>{{ port_data.get('name', 'No disponible')|upper }}</td>
+                  <td>{{ port_data.get('product', 'No disponible') }}</td>
+                  <td>{{ port_data.get('version', 'No disponible') }}</td>
+                  <td>
+                    <span class="badge 
+                    {% if port_data.get('state') == 'open' %}
+                      bg-success
+                    {% elif port_data.get('state') == 'filtered' %}
+                      bg-warning text-dark
+                    {% elif port_data.get('state') == 'closed' %}
+                      bg-danger
+                    {% else %}
+                      bg-secondary
+                    {% endif %}">
+                    {{ estadosPuertos.get(port_data.get('state'), 'No disponible') }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -221,42 +227,44 @@
         <h3 class="card-title">Descubrimiento de Hosts - {{ result['nmap'].get('scanstats', {}).get('uphosts', 0) }} activos</h3>
       </div>
       <div class="card-body">  
-        <table class="table table-bordered table-hover">
-          <thead class="thead-dark">
-            <tr>
-                <th>IP</th>
-                <th>Hostname</th>
-                <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for ip, host_data in result['scan'].items() %}
-              {% if host_data.get('status', {}).get('state') == 'up' %}
-                <tr>
-                  <td>{{ host_data.get('addresses', {}).get('ipv4', 'No disponible') }}</td>
-                  <td>
-                    {% if host_data.get('hostnames') and host_data['hostnames']|length > 0 %}
-                      {{ host_data['hostnames'][0].get('name', 'No disponible') }}
-                    {% else %}
-                      No disponible
-                    {% endif %}
-                  </td>
-                  <td>
-                    <span class="badge 
-                    {% if host_data.get('status', {}).get('state') == 'up' %}
-                      bg-success
-                    {% elif host_data.get('status', {}).get('state') == 'down' %}
-                      bg-danger
-                    {% else %}
-                      bg-secondary
-                    {% endif %}">
-                    {{ host_data.get('status', {}).get('state', 'No disponible')|capitalize }}
-                  </td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
+              <tr>
+                  <th>IP</th>
+                  <th>Hostname</th>
+                  <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ip, host_data in result['scan'].items() %}
+                {% if host_data.get('status', {}).get('state') == 'up' %}
+                  <tr>
+                    <td>{{ host_data.get('addresses', {}).get('ipv4', 'No disponible') }}</td>
+                    <td>
+                      {% if host_data.get('hostnames') and host_data['hostnames']|length > 0 %}
+                        {{ host_data['hostnames'][0].get('name', 'No disponible') }}
+                      {% else %}
+                        No disponible
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge 
+                      {% if host_data.get('status', {}).get('state') == 'up' %}
+                        bg-success
+                      {% elif host_data.get('status', {}).get('state') == 'down' %}
+                        bg-danger
+                      {% else %}
+                        bg-secondary
+                      {% endif %}">
+                      {{ host_data.get('status', {}).get('state', 'No disponible')|capitalize }}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     {% endif %}
