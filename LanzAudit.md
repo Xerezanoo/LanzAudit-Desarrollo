@@ -1492,4 +1492,137 @@ def aiReport(scan_id):
 
 ---
 ## Dockerizar la app
+Para Dockerizar la app vamos a hacer varios pasos:
+1. Metemos la app en `LanzAudit-Docker/app/`
+2. Creamos en la raíz de `LanzAudit-Docker` los archivos para Dockerizarla:
+`Dockerfile`:
+```bash
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Instalar dependencias del sistema, Nmap y WPScan
+RUN apt update && apt install -y \
+    build-essential \
+    libffi-dev \
+    libcairo2 \
+    pango1.0-tools \
+    libpango1.0-dev \
+    libgdk-pixbuf2.0-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libjpeg-dev \
+    libpq-dev \
+    git \
+    curl \
+    nmap \
+    ruby-full \
+    && gem install wpscan \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear carpeta de trabajo
+WORKDIR /app
+
+# Copiar dependencias e instalar
+COPY app/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el código de la app
+COPY app/ .
+
+# Copiar entrypoint y wait-for-it
+COPY entrypoint.sh /entrypoint.sh
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /entrypoint.sh /wait-for-it.sh
+
+# Entrypoint con migraciones automáticas
+ENTRYPOINT ["/entrypoint.sh"]
+
+EXPOSE 8000
+```
+
+`docker-compose.yml`:
+```yml
+services:
+  web:
+    build:
+      context: .
+    container_name: lanzaudit_web
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+    expose:
+      - "8000"
+    volumes:
+      - static:/app/static
+      - reports:/app/reports
+      - profile_pics:/app/profile_pics
+
+  db:
+    image: mariadb:11.3
+    container_name: lanzaudit_db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - TZ=Europe/Madrid
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    expose:
+      - "3306"
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: lanzaudit_nginx
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - web
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - static:/app/static
+      - reports:/app/reports
+      - profile_pics:/app/profile_pics
+
+volumes:
+  mariadb_data:
+  static:
+  reports:
+  profile_pics:
+
+```
+
+`entrypoint.sh`:
+```bash
+#!/bin/sh
+echo "[LanzAudit] Esperando a que MariaDB esté disponible..."
+/wait-for-it.sh db:3306 --timeout=60 --strict -- echo "[LanzAudit] MariaDB está listo."
+
+# Inicializar migraciones solo si no existe la carpeta
+if [ ! -d "migrations" ]; then
+  echo "[LanzAudit] Primer uso: creando carpeta de migraciones..."
+  flask db init
+  flask db migrate -m "Migración inicial"
+fi
+
+echo "[LanzAudit] Aplicando migraciones si hacen falta..."
+flask db upgrade
+
+# Lanzar Gunicorn y pasar a la siguiente línea, es decir, arrancarlo en segundo plano (&)
+echo "[LanzAudit] Lanzando Gunicorn..."
+exec gunicorn --bind 0.0.0.0:8000 --timeout 600 wsgi:app &
+
+# Esperar a que Gunicorn escuche (máximo 30seg)
+/wait-for-it.sh 127.0.0.1:8000 --timeout=30 --strict -- echo "[LanzAudit] Gunicorn está escuchando."
+
+echo "[LanzAudit] Listo, contenedor preparado."
+
+# Como ya está escuchando, nos traemos lo que dejamos en el background (&) al foreground (fg %1)
+fg %1
+```
+
 

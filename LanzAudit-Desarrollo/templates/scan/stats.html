@@ -44,7 +44,11 @@
             <div class="card-body">
               <i class="bi bi-clock-history fs-2 text-warning"></i>
               <h5 class="mt-2">Último Escaneo</h5>
-              <p class="h6">{{ last_scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+              {% if last_scan %}
+                <p class="h6">{{ last_scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+              {% else %}
+                <p class="text-muted">Sin escaneos aún</p>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -210,7 +214,13 @@
               <span class="badge bg-danger">Fallido</span>
             {% endif %}
           </td>
-          <td>{{ scan.user.username }}</td>
+          <td>
+            {% if scan.user %}
+              {{ scan.user.username }}
+            {% else %}
+              <span class="text-muted">Usuario desconocido</span>
+            {% endif %}
+          </td>
           <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
           <td>
             <div class="d-flex justify-content-between align-items-center">
