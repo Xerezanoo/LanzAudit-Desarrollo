@@ -71,12 +71,20 @@
             </li>
             <li class="nav-item dropdown user-menu">
               <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                <img src="{{ url_for('profile_pics', filename=current_user.profile_picture or 'default.png') }}" class="user-image rounded-circle shadow" alt="User Image" />
+                {% if current_user.profile_picture %}
+                  <img src="{{ url_for('profile_pics', filename=current_user.profile_picture) }}" class="user-image rounded-circle shadow" alt="User Image" />
+                {% else %}
+                  <img src="{{ url_for('static', filename='default.png') }}" class="user-image rounded-circle shadow" alt="Default User Image" />
+                {% endif %}
                 <span class="d-none d-md-inline">{{ current_user.username }}</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <li class="user-header text-bg-primary">
-                  <img src="{{ url_for('profile_pics', filename=current_user.profile_picture or 'default.png') }}" class="rounded-circle shadow" alt="User Image" />
+                  {% if current_user.profile_picture %}
+                    <img src="{{ url_for('profile_pics', filename=current_user.profile_picture) }}" class="user-image rounded-circle shadow" alt="User Image" />
+                  {% else %}
+                    <img src="{{ url_for('static', filename='default.png') }}" class="user-image rounded-circle shadow" alt="Default User Image" />
+                  {% endif %}
                   <p>
                     {{ current_user.username }} - {{ current_user.role }}
                     <br>

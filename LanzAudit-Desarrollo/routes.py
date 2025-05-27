@@ -406,7 +406,7 @@ def profile():
     if user.profile_picture:
         image_url = url_for('profile_pics', filename=user.profile_picture)
     else:
-        image_url = url_for('profile_pics', filename='default.png')
+        image_url = url_for('static', filename='default.png')
 
     return render_template('profile.html', image_url=image_url)
 

@@ -25,6 +25,8 @@ Rellena los datos que falten (los que están entre corchetes (`[]`)).
 
 - Para generar claves secretas como la `SECRET_KEY` o la `MARIADB_ROOT_PASSWORD`, puedes usar otro proyecto mío llamado `PassGen`, que genera una clave segura en 1 segundo: https://github.com/Xerezanoo/PassGen.git
 
+Pon también la contraseña del usuario de la base de datos, `MARIADB_PASSWORD`, que será la misma que deberás poner en la `DATABASE_URI`.
+
 - En `MAIL_USERNAME` pon tu correo Gmail y en `MAIL_PASSWORD` tendrás que poner una contraseña de aplicación.
 Para generar tu contraseña de aplicación:
 1. Activa la verificación en dos pasos de tu cuenta de Google: https://support.google.com/accounts/answer/185839
