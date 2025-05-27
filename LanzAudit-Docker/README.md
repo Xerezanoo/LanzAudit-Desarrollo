@@ -12,7 +12,7 @@ También cuenta con una IA para generar informes de los escaneos en PDF en un fo
 
 ## 🐳 **Cómo usar LanzAudit con Docker**
 
-### 1️. Clona el repositorio
+### 1. Clona el repositorio
 
 ```bash
 git clone https://github.com/Xerezanoo/LanzAudit.git
@@ -23,19 +23,19 @@ cd LanzAudit
 Edita el archivo `.env_example` que se encuentra dentro del proyecto.
 Rellena los datos que falten (los que están entre corchetes (`[]`)).
 
-Para generar claves secretas como la `SECRET_KEY` o la `MARIADB_ROOT_PASSWORD`, puedes usar otro proyecto mío llamado `PassGen`, que genera una clave segura en 1 segundo: https://github.com/Xerezanoo/PassGen.git
+- Para generar claves secretas como la `SECRET_KEY` o la `MARIADB_ROOT_PASSWORD`, puedes usar otro proyecto mío llamado `PassGen`, que genera una clave segura en 1 segundo: https://github.com/Xerezanoo/PassGen.git
 
-En `MAIL_USERNAME` pon tu correo Gmail y en `MAIL_PASSWORD` tendrás que poner una contraseña de aplicación.
+- En `MAIL_USERNAME` pon tu correo Gmail y en `MAIL_PASSWORD` tendrás que poner una contraseña de aplicación.
 Para generar tu contraseña de aplicación:
 1. Activa la verificación en dos pasos de tu cuenta de Google: https://support.google.com/accounts/answer/185839
 2. Crea una nueva contraseña de aplicación con el nombre LanzAudit: https://myaccount.google.com/u/3/apppasswords
 3. Pega la contraseña toda junta, sin espacios (serán 16 digitos o caracteres)
 
-Ahora regístrate, genera tus API Key gratuitas y pégalas en el `.env_example`:
-- WPScan: https://wpscan.com/profile/
-- Cohere (IA): https://dashboard.cohere.com/api-keys
+- Ahora regístrate, genera tus API Key gratuitas y pégalas en el `.env_example`:
+    - WPScan: https://wpscan.com/profile/
+    - Cohere (IA): https://dashboard.cohere.com/api-keys
 
-Y por último, renombra el archivo para que sea tu `.env`:
+- Y por último, renombra el archivo para que sea tu `.env`:
 ```bash
 mv .env_example .env
 ```
