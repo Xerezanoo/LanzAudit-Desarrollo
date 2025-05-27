@@ -28,7 +28,7 @@ Rellena los datos que falten (los que están entre corchetes (`[]`)).
 - En `MAIL_USERNAME` pon tu correo Gmail y en `MAIL_PASSWORD` tendrás que poner una contraseña de aplicación.
 Para generar tu contraseña de aplicación:
 1. Activa la verificación en dos pasos de tu cuenta de Google: https://support.google.com/accounts/answer/185839
-2. Crea una nueva contraseña de aplicación con el nombre LanzAudit: https://myaccount.google.com/u/3/apppasswords
+2. Crea una nueva contraseña de aplicación con el nombre LanzAudit: https://myaccount.google.com/apppasswords
 3. Pega la contraseña toda junta, sin espacios (serán 16 digitos o caracteres)
 
 - Ahora regístrate, genera tus API Key gratuitas y pégalas en el `.env_example`:
@@ -47,9 +47,10 @@ docker compose build
 
 ### 4. Levanta la aplicación
 Esto lanzará:
-MariaDB (contenedor `db`)
-LanzAudit (contenedor `web` con Flask + Gunicorn)
-Nginx (contenedor `nginx` como proxy inverso)
+
+- MariaDB (contenedor `db`)
+- LanzAudit (contenedor `web` con Flask + Gunicorn)
+- Nginx (contenedor `nginx` como proxy inverso)
 
 ```bash
 docker compose up -d
@@ -57,6 +58,7 @@ docker compose up -d
 
 ### 5. Accede a la aplicación
 Ya podrás abrir tu navegador y acceder a `http://localhost:8080` para entrar a la aplicación.
+
 Si entras demasiado rápido, es posible que Flask todavía esté arrancando. Espera unos segundos tras levantar los contenedores para acceder.
 
 ### Detener los contenedores
@@ -76,68 +78,133 @@ Aun así, si realiza algún escaneo que supere los 10 min, se guardará como fal
 
 ### Estructura principal
 .
+
 ├── app
+
 │   ├── app.py
+
 │   ├── config.py
+
 │   ├── models.py
+
 │   ├── requirements.txt
+
 │   ├── routes.py
+
 │   ├── scanners
+
 │   │   ├── nmapScanner.py
+
 │   │   └── wpscanScanner.py
+
 │   ├── static
+
 │   │   ├── assets
+
 │   │   │   └── img
+
 │   │   │       ├── LanzAuditLogo-Blanco.png
+
 │   │   │       ├── LanzAuditLogo-ConFondo.png
+
 │   │   │       └── LanzAuditLogo-Negro.png
+
 │   │   ├── css
+
 │   │   │   ├── adminlte.css
+
 │   │   │   └── adminlte.min.css
+
 │   │   ├── favicon.ico
+
 │   │   └── js
+
 │   │       ├── adminlte.js
+
 │   │       └── adminlte.min.js
+
 │   ├── templates
+
 │   │   ├── admin
+
 │   │   │   ├── add-user.html
+
 │   │   │   ├── edit-user.html
+
 │   │   │   ├── manage-users.html
+
 │   │   │   └── resolve-reset-request.html
+
 │   │   ├── base.html
+
 │   │   ├── error
+
 │   │   │   ├── 400.html
+
 │   │   │   ├── 401.html
+
 │   │   │   ├── 403.html
+
 │   │   │   ├── 404.html
+
 │   │   │   ├── 405.html
+
 │   │   │   ├── 500.html
+
 │   │   │   ├── 502.html
+
 │   │   │   └── 503.html
+
 │   │   ├── faq.html
+
 │   │   ├── index.html
+
 │   │   ├── license.html
+
 │   │   ├── login.html
+
 │   │   ├── password-recovery.html
+
 │   │   ├── profile.html
+
 │   │   ├── scan
+
 │   │   │   ├── nmap-detail.html
+
 │   │   │   ├── nmap-scan.html
+
 │   │   │   ├── scan.html
+
 │   │   │   ├── stats.html
+
 │   │   │   ├── wpscan-detail.html
+
 │   │   │   └── wpscan-scan.html
+
 │   │   └── setup-admin.html
+
 │   ├── utils
+
 │   │   ├── emails.py
+
 │   │   ├── pdf.py
+
 │   │   ├── stats.py
+
 │   │   └── ttl.py
+
 │   └── wsgi.py
+
 ├── docker-compose.yml
+
 ├── Dockerfile
+
 ├── entrypoint.sh
+
 ├── nginx
+
 │   └── default.conf
+
 ├── README.md
+
 └── wait-for-it.sh
