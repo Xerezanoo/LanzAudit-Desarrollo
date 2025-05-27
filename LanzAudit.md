@@ -1612,17 +1612,34 @@ fi
 echo "[LanzAudit] Aplicando migraciones si hacen falta..."
 flask db upgrade
 
-# Lanzar Gunicorn y pasar a la siguiente línea, es decir, arrancarlo en segundo plano (&)
+# Lanzar Gunicorn
 echo "[LanzAudit] Lanzando Gunicorn..."
-exec gunicorn --bind 0.0.0.0:8000 --timeout 600 wsgi:app &
-
-# Esperar a que Gunicorn escuche (máximo 30seg)
-/wait-for-it.sh 127.0.0.1:8000 --timeout=30 --strict -- echo "[LanzAudit] Gunicorn está escuchando."
-
-echo "[LanzAudit] Listo, contenedor preparado."
-
-# Como ya está escuchando, nos traemos lo que dejamos en el background (&) al foreground (fg %1)
-fg %1
+exec gunicorn --bind 0.0.0.0:8000 --timeout 600 wsgi:app
 ```
 
+3. Creamos también el archivo de configuración para que Nginx haga de proxy inverso y espere 10 minutos por si algún escaneo se alarga:
+`nginx/default.conf`:
+```bash
+server {
+    listen 80;
 
+    location / {
+        proxy_pass http://web:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 600;
+        proxy_send_timeout 600;
+        proxy_read_timeout 600;
+
+    }
+
+    location /static/ {
+        alias /app/static/;
+    }
+}
+```
+
+Y listo, ya he escrito un `README.md` para saber cómo se usa.

@@ -31,6 +31,8 @@ Para generar tu contraseña de aplicación:
 2. Crea una nueva contraseña de aplicación con el nombre LanzAudit: https://myaccount.google.com/apppasswords
 3. Pega la contraseña toda junta, sin espacios (serán 16 digitos o caracteres)
 
+No te olvides de poner también tu correo en el `MAIL_DEFAULT_SENDER`.
+
 - Ahora regístrate, genera tus API Key gratuitas y pégalas en el `.env_example`:
     - WPScan: https://wpscan.com/profile/
     - Cohere (IA): https://dashboard.cohere.com/api-keys
@@ -77,134 +79,14 @@ Se ha configurado la aplicación para aguantar hasta 10 minutos de espera, por s
 Aun así, si realiza algún escaneo que supere los 10 min, se guardará como fallido por exceder el tiempo máximo de espera.
 
 ### Estructura principal
-.
+- `/app`: Código fuente de Flask
 
-├── app
+- `/app/static`: Archivos estáticos
 
-│   ├── app.py
+- `/app/templates`: Plantillas HTML (Jinja2)
 
-│   ├── config.py
+- `Dockerfile`: Imagen de LanzAudit
 
-│   ├── models.py
+- `docker-compose.yml`: Orquestación completa de los 3 contenedores
 
-│   ├── requirements.txt
-
-│   ├── routes.py
-
-│   ├── scanners
-
-│   │   ├── nmapScanner.py
-
-│   │   └── wpscanScanner.py
-
-│   ├── static
-
-│   │   ├── assets
-
-│   │   │   └── img
-
-│   │   │       ├── LanzAuditLogo-Blanco.png
-
-│   │   │       ├── LanzAuditLogo-ConFondo.png
-
-│   │   │       └── LanzAuditLogo-Negro.png
-
-│   │   ├── css
-
-│   │   │   ├── adminlte.css
-
-│   │   │   └── adminlte.min.css
-
-│   │   ├── favicon.ico
-
-│   │   └── js
-
-│   │       ├── adminlte.js
-
-│   │       └── adminlte.min.js
-
-│   ├── templates
-
-│   │   ├── admin
-
-│   │   │   ├── add-user.html
-
-│   │   │   ├── edit-user.html
-
-│   │   │   ├── manage-users.html
-
-│   │   │   └── resolve-reset-request.html
-
-│   │   ├── base.html
-
-│   │   ├── error
-
-│   │   │   ├── 400.html
-
-│   │   │   ├── 401.html
-
-│   │   │   ├── 403.html
-
-│   │   │   ├── 404.html
-
-│   │   │   ├── 405.html
-
-│   │   │   ├── 500.html
-
-│   │   │   ├── 502.html
-
-│   │   │   └── 503.html
-
-│   │   ├── faq.html
-
-│   │   ├── index.html
-
-│   │   ├── license.html
-
-│   │   ├── login.html
-
-│   │   ├── password-recovery.html
-
-│   │   ├── profile.html
-
-│   │   ├── scan
-
-│   │   │   ├── nmap-detail.html
-
-│   │   │   ├── nmap-scan.html
-
-│   │   │   ├── scan.html
-
-│   │   │   ├── stats.html
-
-│   │   │   ├── wpscan-detail.html
-
-│   │   │   └── wpscan-scan.html
-
-│   │   └── setup-admin.html
-
-│   ├── utils
-
-│   │   ├── emails.py
-
-│   │   ├── pdf.py
-
-│   │   ├── stats.py
-
-│   │   └── ttl.py
-
-│   └── wsgi.py
-
-├── docker-compose.yml
-
-├── Dockerfile
-
-├── entrypoint.sh
-
-├── nginx
-
-│   └── default.conf
-
-├── README.md
-
-└── wait-for-it.sh
+- `nginx/default.conf`: Configuración del proxy inverso
