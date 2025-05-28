@@ -391,6 +391,8 @@ def profile():
 
                 filename = f"user_{user.id}.png"
                 image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                    os.makedirs(app.config['UPLOAD_FOLDER'])
                 image.save(image_path)
 
                 user.profile_picture = filename
