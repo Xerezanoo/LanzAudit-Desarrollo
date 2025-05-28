@@ -1557,7 +1557,6 @@ services:
     expose:
       - "8000"
     volumes:
-      - static:/app/static
       - reports:/app/reports
       - profile_pics:/app/profile_pics
 
@@ -1584,13 +1583,11 @@ services:
       - web
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - static:/app/static
       - reports:/app/reports
       - profile_pics:/app/profile_pics
 
 volumes:
   mariadb_data:
-  static:
   reports:
   profile_pics:
 
@@ -1643,3 +1640,19 @@ server {
 ```
 
 Y listo, ya he escrito un `README.md` para saber cómo se usa.
+
+---
+## Producción VPS remoto DigitalOcean
+Vamos a poner nuestra aplicación en producción en un VPS remoto en DigitalOcean.
+Primero, vamos a comprarnos un dominio. Yo lo voy a hacer en `Name.com`, porque tenemos un dominio gratuito con GitHub Education. He elegido `lanzaudit.systems`.
+
+Ahora vamos a DigitalOcean (que también tenemos 200€ gratuitos para gastar aquí gracias a GitHub Education) y creamos un nuevo Droplet.
+1. Elegimos la región de Frankfurt porque es la más cercana
+2. Elegimos una imagen Ubuntu 24.04 LTS porque es la última versión estable
+3. Elegimos un Droplet tipo básico con una CPU Premium Intel (2 Intel CPUs, 4GB RAM, 120GB NVMe SSD, 4TB Transfer, 32€/mes)
+4. Pegamos nuestra clave pública SSH, que se encontrará en `~/.ssh/clave.pub`
+5. Activamos la monitorización que es gratuita y la conectividad IPv6 por si acaso también
+6. Elegimos que queremos 1 Droplet y que el hostname será `LanzAudit`
+7. Creamos el Droplet
+
+Y listo, se nos activará nuestro VPS y nos dará la IP pública del mismo.
