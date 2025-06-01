@@ -69,7 +69,7 @@
 Flask --> ¿Por qué Flask en vez de Django?
 
 
-## Plantilla Dashboard Flask (Flask-adminator)
+## Plantilla Dashboard Flask (Flask-adminator) -- DESCARTADO porque tiene backend, yo solo quiero frontend
 He encontrado un proyecto en GitHub con una plantilla de Panel muy parecida a lo que necesito:
 https://github.com/app-generator/flask-adminator/tree/master
 
