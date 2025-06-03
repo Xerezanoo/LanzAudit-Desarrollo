@@ -6,20 +6,27 @@ def runNmapScan(target, scan_type, ports=None):
     
     ttl = pingGetTtl(target)
     
-    if scan_type == "fast":
-        nm.scan(hosts=target, arguments="-F")
-    elif scan_type == "full":
-        nm.scan(hosts=target, arguments="-p- -sVC")
-    elif scan_type == "versions":
-        nm.scan(hosts=target, arguments="-sV")
-    elif scan_type == "discovery":
-        nm.scan(hosts=target, arguments="-sn")
-    elif scan_type == "custom" and ports:
-        nm.scan(hosts=target, arguments="-sVC" , ports=ports)
-    else:
-        return {"error": "Tipo de escaneo inválido o puertos no especificados."}
+    try:
+        if scan_type == "fast":
+            nm.scan(hosts=target, arguments="-F -T4")
+        elif scan_type == "full":
+            nm.scan(hosts=target, arguments="-p- -sVC -T4 --min-rate 5000")
+        elif scan_type == "versions":
+            nm.scan(hosts=target, arguments="-sV -T4")
+        elif scan_type == "discovery":
+            nm.scan(hosts=target, arguments="-sn")
+        elif scan_type == "custom" and ports:
+            nm.scan(hosts=target, arguments="-sVC -T4" , ports=ports)
+        else:
+            return False, {"error": "Tipo de escaneo inválido o puertos no especificados."}, ttl
+    except Exception as error:
+        return False, {"error": str(error)}, ttl
     
-    return nm.all_hosts(), nm._scan_result, ttl
+    all_hosts = nm.all_hosts()
+    if not all_hosts:
+        return False, {"error": "Nmap puede haber fallado o superado el tiempo de espera."}, ttl
+        
+    return True, nm._scan_result, ttl
 
 def validatePorts(ports):
     # Verifica si los puertos están en el formato adecuado (números o rangos como "22,80,443" o "1-1000")
