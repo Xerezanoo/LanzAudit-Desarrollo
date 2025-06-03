@@ -6,13 +6,15 @@ def pingGetTtl(target):
         # Ejecuta el comando ping con 1 paquete al objetivo
         result = subprocess.run(["/usr/bin/ping", "-c", "1", target], capture_output=True, text=True)
         
-        # Busca una línea en la salida que contenga "ttl="
-        ttl_line = next(line for line in result.stdout.splitlines() if "ttl=" in line)
-        
-        # Guarda el valor del TTL como un entero en la variable 'ttl'
-        if ttl_line:
+        if result.returncode == 0:
+            # Busca una línea en la salida que contenga "ttl="
+            ttl_line = next(line for line in result.stdout.splitlines() if "ttl=" in line)
+            
+            # Guarda el valor del TTL como un entero en la variable 'ttl'
             ttl = int(ttl_line.split("ttl=")[1].split()[0])
             return ttl  # Devuelve el valor del TTL encontrado
+        else:
+            return None  # Si el comando falló, devuelve None
         
     except Exception as error:
         # En caso de error (comando no disponible o problema de conexión por ejemplo), devuelve None
