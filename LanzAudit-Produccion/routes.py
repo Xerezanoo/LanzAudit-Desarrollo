@@ -132,7 +132,7 @@ def passwordRecovery():
     
             if user:
                 if user.password_reset_requested:
-                    flash('Ya hay una solicitud pendiente para este usuario.', 'warning')
+                    flash('Ya hay una solicitud pendiente para este usuario', 'warning')
                     return redirect(url_for('login'))
     
                 user.password_reset_requested = True
@@ -142,7 +142,7 @@ def passwordRecovery():
                 # Llamamos a la función newRequest para notificar a los administradores
                 newRequest(user, reason, message)
     
-                flash('Solicitud de recuperación enviada correctamente.', 'success')
+                flash('Solicitud de recuperación enviada correctamente', 'success')
                 return redirect(url_for('login'))
     
             flash('No se encontró ningún usuario con ese correo electrónico', 'danger')
@@ -254,7 +254,7 @@ def addUser():
         existing_user = db.session.query(User).filter((User.username == username) | (User.email == email)).first()
         
         if existing_user:
-            flash("El nombre de usuario o el correo electrónico ya están registrados", "danger")
+            flash('El nombre de usuario o el correo electrónico ya están registrados', 'danger')
             return redirect(url_for('addUser'))
         
         new_user = User(
@@ -288,7 +288,7 @@ def editUser(user_id):
         existing_email = db.session.query(User).filter((User.email == email)).first()
         
         if existing_email:
-            flash("El correo electrónico ya está registrado", "danger")
+            flash('El correo electrónico ya está registrado', 'danger')
             return redirect(url_for('editUser', user_id=user.id))
         
         if email:
@@ -309,7 +309,7 @@ def editUser(user_id):
         existing_user = db.session.query(User).filter((User.username == username) | (User.email == email)).filter(User.id != user.id).first()
         
         if existing_user:
-            flash("El nombre de usuario o el correo electrónico ya están registrados", "danger")
+            flash('El nombre de usuario o el correo electrónico ya están registrados', 'danger')
             return redirect(url_for('editUser', user_id=user.id))
         
         user.username = username
@@ -494,9 +494,9 @@ def nmapScan():
             db.session.commit()
             flash('Escaneo realizado con éxito', 'success')
         else:
-            flash('Escaneo fallido: ' + result.get("error", "Error desconocido"), 'danger')
+            flash('Escaneo fallido', 'danger')
             
-        return render_template('scan/nmap-scan.html', result=result if success else None, target=target, subtype=subtype)
+        return render_template('scan/nmap-scan.html', result=result, target=target, subtype=subtype)
 
     return render_template('scan/nmap-scan.html')
 
@@ -633,7 +633,7 @@ def nmapDetail(scan_id):
     scan_result = ScanResults.query.filter_by(scan_id=scan_id).first()
 
     if scan.scan_type != 'Nmap':
-        flash('Tipo de escaneo desconocido.', 'warning')
+        flash('Tipo de escaneo desconocido', 'warning')
         return redirect(url_for('stats'))
     
     if scan.status == 'Fallido':
@@ -653,7 +653,7 @@ def wpscanDetail(scan_id):
     scan_result = ScanResults.query.filter_by(scan_id=scan_id).first()
 
     if scan.scan_type != 'WPScan':
-        flash('Tipo de escaneo desconocido.', 'warning')
+        flash('Tipo de escaneo desconocido', 'warning')
         return redirect(url_for('stats'))
 
     if scan.status == 'Fallido':

@@ -25,20 +25,21 @@
         </div>
         {% endif %}
         {% endwith %}
-        <table class="table table-bordered table-hover">
-            <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Usuario</th>
-                    <th>Email</th>
-                    <th>Rol</th>
-                    <th>Recuperación</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
+        <div class="table-responsive-sm"> 
+          <table class="table table-bordered table-hover">
+              <thead class="thead-dark">
+                  <tr>
+                      <th>ID</th>
+                      <th>Usuario</th>
+                      <th>Email</th>
+                      <th>Rol</th>
+                      <th>Recuperación</th>
+                      <th>Acciones</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for user in users %}
+                  <tr>
                     <td>{{ user.id }}</td>
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
@@ -58,7 +59,7 @@
                         </a>
                         <!-- Botón de Eliminar con icono de papelera -->    
                         {% if user.username != 'LanzAdmin' %}    
-                        <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ user.id }}" title="Eliminar">
+                        <button type="button" class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.id }}" title="Eliminar">
                             <i class="bi bi-trash"></i>
                         </button>
                         {% endif %}
@@ -69,32 +70,32 @@
                         </a>
                         {% endif %}
                     </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                  </tr>
+                  <!-- Modal Confirmación -->
+                  <div class="modal fade" id="deleteModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="deleteModalLabel">Confirmación de eliminación</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          ¿Estás seguro de que quieres eliminar el usuario {{ user.username }}?
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                          <form id="deleteForm" method="POST" action="{{ url_for('deleteUser', user_id=user.id) }}">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+              </tbody>
+          </table>
+        </div>
     </div>
-</div>
-
-<!-- Modal de Confirmación -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Confirmación de eliminación</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        ¿Estás seguro de que quieres eliminar este usuario?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <form id="deleteForm" method="POST" action="{{ url_for('deleteUser', user_id=0) }}">
-          <button type="submit" class="btn btn-danger">Eliminar</button>
-        </form>
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}
 

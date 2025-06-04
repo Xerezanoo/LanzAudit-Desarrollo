@@ -471,20 +471,20 @@ def nmapScan():
                 flash('Formato de puertos no válido', 'danger')
                 return redirect(url_for('nmapScan'))
 
-        try:
-            # Ejecutar escaneo
-            hosts, result, ttl = runNmapScan(target, subtype, ports)
-
-            # Guardar escaneo exitoso
-            new_scan = Scan(
-                user_id=current_user.id,
-                scan_type='Nmap',
-                scan_parameters={"target": target, "subtype": subtype, "ports": ports},
-                status='Completado'
-            )
-            db.session.add(new_scan)
-            db.session.commit()
-
+        # Ejecutar escaneo
+        success, result, ttl = runNmapScan(target, subtype, ports)
+        # Guardar escaneo
+        new_scan = Scan(
+            user_id=current_user.id,
+            scan_type='Nmap',
+            scan_parameters={"target": target, "subtype": subtype, "ports": ports},
+            status='Completado' if success else 'Fallido',
+            error_message=None if success else result.get("error")
+        )
+        db.session.add(new_scan)
+        db.session.commit()
+        
+        if success:
             scan_result = ScanResults(
                 scan_id=new_scan.id,
                 result=result,
@@ -492,23 +492,11 @@ def nmapScan():
             )
             db.session.add(scan_result)
             db.session.commit()
-
             flash('Escaneo realizado con éxito', 'success')
-            return render_template('scan/nmap-scan.html', result=result, target=target, subtype=subtype)
-
-        except Exception as error:
-            # Guardar escaneo fallido
-            new_scan = Scan(
-                user_id=current_user.id,
-                scan_type='Nmap',
-                scan_parameters={"target": target, "subtype": subtype, "ports": ports},
-                error_message=str(error)
-            )
-            db.session.add(new_scan)
-            db.session.commit()
-
+        else:
             flash('Escaneo fallido', 'danger')
-            return render_template('scan/nmap-scan.html', result=None, target=target, subtype=subtype)
+            
+        return render_template('scan/nmap-scan.html', result=result, target=target, subtype=subtype)
 
     return render_template('scan/nmap-scan.html')
 
