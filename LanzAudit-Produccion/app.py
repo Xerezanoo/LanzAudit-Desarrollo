@@ -6,7 +6,9 @@ from config import Config
 from models import db, User
 from flask_migrate import Migrate
 from flask_login import LoginManager
-from flask_mail import Mail
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Inicialización de la aplicación Flask y carga de la configuración desde Config
 app = Flask(__name__)
@@ -28,9 +30,6 @@ def loadUser(user_id):
 def unauthorized():
     flash('Por favor, inicia sesión para acceder a esta página', 'warning')
     return redirect(url_for('login'))
-
-# Inicialización de Flask-Mail
-mail = Mail(app)
 
 # Importación de todas las rutas del proyecto
 from routes import *
