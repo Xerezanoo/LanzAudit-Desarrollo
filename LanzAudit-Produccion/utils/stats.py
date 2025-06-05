@@ -309,8 +309,8 @@ def vulnerableThemes(n=5):
                     theme_name = theme_info.get("style_name", slug)
                     vuln_counter[theme_name] += len(vulns)
 
-        except Exception as e:
-            print(f"Error procesando scan_result {result.id}: {e}")
+        except Exception as error:
+            print(f"Error procesando scan_result {result.id}: {error}")
             continue
 
     return [{"name": a, "count": b} for a, b in vuln_counter.most_common(n)]

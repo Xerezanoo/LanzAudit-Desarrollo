@@ -34,8 +34,8 @@ def bypasscloud(target):
         call(["fierce","-dns", target]) 
     except OSError:
         call(["fierce.pl","-dns", target])
-    except Exception as e:
-        print("Ha ocurrido un error:", e)
+    except Exception as error:
+        print("Ha ocurrido un error:", error)
 
 def menu():
     while True:

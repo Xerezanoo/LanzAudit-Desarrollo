@@ -16,7 +16,7 @@ def pingGetTtl(target):
             return ttl  # Devuelve el valor del TTL encontrado
         else:
             return None  # Si el comando falló, devuelve None
-    except Exception as e:
+    except Exception as error:
         # En caso de error (comando no disponible o problema de conexión por ejemplo), devuelve None
         return None
 

@@ -152,8 +152,8 @@ class Config(object):
             SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
                 DB_ENGINE, DB_USERNAME, DB_PASS, DB_HOST, DB_PORT, DB_NAME
             )
-        except Exception as e:
-            print('> Error: DBMS Exception: ' + str(e))
+        except Exception as error:
+            print('> Error: DBMS Exception: ' + str(error))
             print('> Fallback to SQLite ')
             USE_SQLITE = True
 
@@ -422,8 +422,8 @@ def test_db():
     try:
         db.session.execute(text('SELECT 1'))  # Consulta corregida
         return "Conexión exitosa a la base de datos!"
-    except Exception as e:
-        return f"Error de conexión: {str(e)}"
+    except Exception as error:
+        return f"Error de conexión: {str(error)}"
 ```
 
 4. Vamos a `http://localhost:5000/test_db` y comprobamos que se ha hecho una conexión exitosa a la base de datos.
