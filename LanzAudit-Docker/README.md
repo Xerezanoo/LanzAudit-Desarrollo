@@ -1,5 +1,5 @@
 # LanzAudit-Docker
-## 🐳 **Cómo usar LanzAudit-Docker**
+## 🐳 Despliegue de la aplicación completamente Dockerizada en producción
 
 ### 1. Clona el repositorio
 
@@ -33,7 +33,7 @@ No te olvides de poner también tu correo en el `MAIL_DEFAULT_SENDER`.
 mv .env_example .env
 ```
 
-### 3. Construye los contenedores
+### 3. Construye la imagen
 ```bash
 docker compose build
 ```
@@ -64,20 +64,3 @@ Si quieres dejar de servirla y además, eliminar los datos (se eliminará todo: 
 ```bash
 docker compose down -v
 ```
-
-### Tiempo de espera configurado
-Se ha configurado la aplicación para aguantar hasta 10 minutos de espera, por si un escaneo se hace más largo de la cuenta.
-Aun así, si realiza algún escaneo que supere los 10 min, se guardará como fallido por exceder el tiempo máximo de espera.
-
-### Estructura principal
-- `/app`: Código fuente de Flask
-
-- `/app/static`: Archivos estáticos
-
-- `/app/templates`: Plantillas HTML (Jinja2)
-
-- `Dockerfile`: Imagen de LanzAudit
-
-- `docker-compose.yml`: Orquestación completa de los 3 contenedores
-
-- `nginx/default.conf`: Configuración del proxy inverso

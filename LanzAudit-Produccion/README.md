@@ -67,24 +67,7 @@ flask db migrate -m "Inicializando la base de datos"
 flask db upgrade
 ```
 
-### 8. Eliminamos el siguiente bloque del `app.py`
-```bash
-if __name__ == "__main__":
-        app.run()
-```
-
-### 9. Creamos el `wsgi.py`, el archivo desde el que Gunicorn cargara la app
-```bash
-nano wsgi.py
-```
-```python
-from app import app
-
-if __name__ == "__main__":
-	app.run()
-```
-
-### 10. Configura LanzAudit como un servicio
+### 8. Configura LanzAudit como un servicio
 ```bash
 sudo nano /etc/systemd/system/lanzauditproduccion.service
 ```
@@ -96,26 +79,31 @@ After=network.target
 [Service]
 User=[tu_usuario]
 Group=www-data
-WorkingDirectory=/var/www/LanzAuditProduccion
-Environment="PATH=/var/www/LanzAuditProduccion/.venv/bin"
+WorkingDirectory=/var/www/LanzAudit-Produccion
+Environment="PATH=/var/www/LanzAudit-Produccion/.venv/bin"
 ExecStart=/var/www/LanzAudit-Produccion/.venv/bin/gunicorn --workers 4 --timeout 600 --bind unix:/var/www/LanzAudit-Produccion/lanzauditproduccion.sock -m 007 wsgi:app
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+Reiniciamos:
+
 ```bash
 sudo systemctl daemon-reload
 ```
+
 Y ya podremos manejarlo como un servicio cualquiera:
+
 ```bash
 sudo systemctl start lanzauditproduccion
 sudo systemctl enable lanzauditproduccion
 sudo systemctl status lanzauditproduccion
 ```
 
-### 11. Configuramos Nginx como proxy inverso
+### 9. Configuramos Nginx como proxy inverso
 ```bash
-nano /etc/nginx/sites-available/lanzaudit
+nano /etc/nginx/sites-available/lanzauditproduccion
 ```
 ```bash
 server {
@@ -132,16 +120,16 @@ server {
 }
 ```
 
-### 12. Habilitamos el sitio
+### 10. Habilitamos el sitio
 ```bash
 sudo ln -s /etc/nginx/sites-available/lanzauditproduccion /etc/nginx/sites-enabled
 ```
 
-### 13. Comprobamos si tenemos errores de sintaxis
+### 11. Comprobamos si tenemos errores de sintaxis
 ```bash
 sudo nginx -t
 ```
-### 14. Y reiniciamos todo
+### 12. Y reiniciamos todo
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl restart nginx
