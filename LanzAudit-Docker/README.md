@@ -1,22 +1,11 @@
-# LanzAudit
-
-LanzAudit es una aplicación web para realizar, gestionar y visualizar escaneos de seguridad (con herramientas como Nmap, WPScan) a través de una interfaz web Flask muy intuitiva, lista para ejecutarse en producción usando Docker, Gunicorn y Nginx.
-
-Está diseñada para que pueda usarse en el ámbito empresarial sin la necesidad de tener amplios conocimientos técnicos en Ciberseguridad.
-
-Cuenta con una herramienta para la gestión de usuarios por parte del Administrador para poder asignar roles (Admin, Worker y Analyst). Según el rol, podrán hacer o no ciertas cosas en la aplicación.
-
-También cuenta con una IA para generar informes de los escaneos en PDF en un formato amigable y presentable en apenas 1 minuto.
-
----
-
-## 🐳 **Cómo usar LanzAudit con Docker**
+# LanzAudit-Docker
+## 🐳 **Cómo usar LanzAudit-Docker**
 
 ### 1. Clona el repositorio
 
 ```bash
-git clone https://github.com/Xerezanoo/LanzAudit.git
-cd LanzAudit
+git clone https://github.com/Xerezanoo/LanzAudit-Desarrollo.git
+cd LanzAudit-Desarrollo/LanzAudit-Docker
 ```
 
 ### 2. Configura el entorno
@@ -63,7 +52,7 @@ docker compose up -d
 ### 5. Accede a la aplicación
 Ya podrás abrir tu navegador y acceder a `http://localhost:8080` para entrar a la aplicación.
 
-Si entras demasiado rápido, es posible que Flask todavía esté arrancando. Espera unos segundos tras levantar los contenedores para acceder.
+Si entras demasiado rápido, es posible que Flask todavía esté arrancando y te de un error `Bad Gateway`. Espera unos segundos tras levantar los contenedores para acceder.
 
 ### Detener los contenedores
 Para dejar de servir la aplicación, puedes parar los contenedores desde la raíz (donde se encuentra el `docker-compose.yml`) con:
