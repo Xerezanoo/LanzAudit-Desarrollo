@@ -1,3 +1,5 @@
+# ttl.py
+
 import subprocess
 
 # Función para hacer ping al objetivo y devolver el valor del TTL (Time to Live)

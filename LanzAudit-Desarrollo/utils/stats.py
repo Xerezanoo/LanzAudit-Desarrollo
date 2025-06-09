@@ -1,3 +1,5 @@
+# stats.py
+
 import json
 from collections import Counter
 from models import Scan,ScanResults
@@ -213,6 +215,7 @@ PORT_ICONS = {
 }
 
 def totalVulns():
+    # Se obtienen todos los resultados completados de WPScan
     wpscan_results = ScanResults.query.join(Scan).filter(
         Scan.scan_type == 'WPScan',
         Scan.status == 'Completado'
@@ -220,6 +223,7 @@ def totalVulns():
 
     total_vulns = 0
 
+    # Se cuentan el total de vulnerabilidades detectadas en todos los escaneos WPScan completados
     for result in wpscan_results:
         try:
             data = result.result 
@@ -245,6 +249,7 @@ def totalVulns():
 
     return total_vulns
 
+# Hacemos lo mismo que hemos hecho con las vulnerabilidades, pero con los temas
 def topThemes(n=5):
     all_results = ScanResults.query.join(Scan).filter(
         Scan.scan_type == 'WPScan',
@@ -268,6 +273,7 @@ def topThemes(n=5):
     # Devolver lista de diccionarios para el render
     return [{"name": a, "count": b} for a, b in themes_counter.most_common(n)]
 
+# Y ahora hacemos lo mismo que hemos hecho con las vulnerabilidades y los temas, pero con los plugins
 def topPlugins(n=5):
     all_results = ScanResults.query.join(Scan).filter(
         Scan.scan_type == 'WPScan',
@@ -291,6 +297,7 @@ def topPlugins(n=5):
 
     return [{"name": a, "count": b} for a, b in plugins_counter.most_common(n)]
 
+# Antes contamos los temas encontrados, pero ahora contamos las vulnerabilidades encontradas por temas, porque habrán temas con vulnerabilidades y sin ellas
 def vulnerableThemes(n=5):
     all_results = ScanResults.query.join(Scan).filter(
         Scan.scan_type == 'WPScan',
@@ -315,6 +322,7 @@ def vulnerableThemes(n=5):
 
     return [{"name": a, "count": b} for a, b in vuln_counter.most_common(n)]
 
+# Hacemos lo mismo con los plugins
 def vulnerablePlugins(n=5):
     all_results = ScanResults.query.join(Scan).filter(
         Scan.scan_type == 'WPScan',

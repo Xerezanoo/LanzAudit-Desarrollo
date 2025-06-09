@@ -1,9 +1,13 @@
+# nmapScanner.py
+
 import nmap
 from utils.ttl import pingGetTtl
 
+# Ejecuta un escaneo Nmap según el tipo especificado y devuelve el resultado y el TTL del host. Si da algún error, se especifica
 def runNmapScan(target, scan_type, ports=None):
     nm = nmap.PortScanner()
     
+    # Obtiene el TTL del host con un ping
     ttl = pingGetTtl(target)
     
     try:
@@ -34,7 +38,7 @@ def validatePorts(ports):
         port_list = ports.split(",")
         for port in port_list:
             if "-" in port:
-                # Verifica que el rango de puertos sea válido
+                # Verifica que el rango de puertos sea válido y que ambos extremos sean números
                 start, end = port.split("-")
                 if not (start.isdigit() and end.isdigit() and int(start) < int(end)):
                     return False

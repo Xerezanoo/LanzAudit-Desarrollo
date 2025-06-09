@@ -1,3 +1,5 @@
+# pdf.py
+
 import cohere
 import os
 from datetime import datetime
@@ -5,6 +7,7 @@ from weasyprint import HTML
 
 co = cohere.Client(os.getenv("COHERE_API_KEY"))
 
+# Generar un informe sobre el escaneo elegido con el modelo command-r-plus de Cohere
 def generateReport(result):
     prompt = f"""
 Genera un informe breve y en texto plano sobre el siguiente resultado de escaneo (puede ser Nmap o WPScan). No utilices caracteres especiales como almohadillas, asteriscos ni viñetas. Solo texto limpio y claro.
@@ -32,9 +35,10 @@ A continuación te proporciono los datos del escaneo en formato JSON:
 
     return response.generations[0].text.strip()
 
+# Generar el PDF con una estructura creada en HTML y el contenido del informe creado con IA
 def generatePDF(report, scan_id=None):
     timestamp = datetime.now().strftime('%Y%m%d-%H%M')
-    file = f"report-{scan_id or timestamp}.pdf"
+    file = f"report-{scan_id}.pdf"
 
     base_path = os.path.join(os.getcwd(), "reports")
     os.makedirs(base_path, exist_ok=True)

@@ -1,8 +1,11 @@
+# emails.py
+
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from models import User
 
+# Enviar un correo con la API de SendGrid con el destinatario, asunto y cuerpo que se le indique
 def sendEmail(to_email, subject, body):
     message = Mail(
         from_email=os.getenv('MAIL_SENDER'),
@@ -16,6 +19,7 @@ def sendEmail(to_email, subject, body):
     except Exception as error:
         pass
 
+# Crear el destinatario (todos los Admin), asunto y cuerpo del correo para cuando se crea una nueva solicitud de recuperación de contraseña. Se introduce el nombre del usuario que lo solicita, la razón y el mensaje adicional si hay
 def newRequest(user, reason, message):
     admins = User.query.filter_by(role='Admin').all()
     for admin in admins:
@@ -30,6 +34,7 @@ def newRequest(user, reason, message):
         """
         sendEmail(admin.email, subject, body)
 
+# Crear el destinatario (el usuario que pidió la recuperación), asunto y cuerpo del correo para cuando se completa la solicitud de recuperación de contraseña. Se informa al usuario que ya se ha completado la solicitud
 def resolvedRequest(user):
     subject = "Tu recuperación de contraseña ha sido completada"
     body = f"""
